@@ -2,6 +2,7 @@
 import type { UnitOfWorkPort } from "../../../application/ports/unit-of-work.port.js";
 import type { DiscoveryTransactionRepositories } from "../../../application/ports/unit-of-work.port.js";
 import type { UserId } from "../../../domain/values/identifiers.js";
+import { canonicalizeParticipants } from "../../../domain/entities/match.js";
 import type { PrismaClient } from "../../../../../generated/prisma/client.js";
 import { PrismaMatchRepository } from "./prisma-match.repository.js";
 import { PrismaProfileRepository } from "./prisma-profile.repository.js";
@@ -22,7 +23,9 @@ export class PrismaUnitOfWork implements UnitOfWorkPort {
   ): Promise<T> {
     return this.prisma.$transaction(async (transaction) => {
       const lockPair = async (firstUserId: UserId, secondUserId: UserId): Promise<void> => {
-        const pairKey = [firstUserId, secondUserId].sort().join("\\u0000");
+        const [userLowId, userHighId] = canonicalizeParticipants(firstUserId, secondUserId);
+        // JSON array encoding is unambiguous and uses the same canonical order as Match rows.
+        const pairKey = JSON.stringify([userLowId, userHighId]);
         await transaction.$queryRaw`SELECT public.yugora_acquire_pair_lock(
           ${YUGORA_ADVISORY_LOCK_NAMESPACE},
           hashtext(${pairKey})
