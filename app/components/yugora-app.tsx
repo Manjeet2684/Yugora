@@ -76,7 +76,7 @@ function ProfileImage({ profile, className = "" }: { profile: Pick<PublicProfile
     <div className={`profile-image ${className}`}>
       <div className="profile-image-fallback" aria-hidden="true">{initial}</div>
       {!failed && (
-        // Profile photos are fictional seeded placeholders. The fallback remains visible if the image host fails.
+        // Profile photos are fictional local placeholders. The initials fallback remains available if an asset fails.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={profile.photoUrl} alt={`${profile.name}'s profile`} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
       )}
@@ -350,7 +350,7 @@ export default function YugoraApp() {
       setProfiles((current) => current.filter((item) => item.id !== profile.id));
       setDrag({ x: 0, y: 0 });
       setExitDirection(null);
-      setStatusMessage(result.matched ? `You and ${profile.name} matched.` : `${profile.name} ${direction === "LIKE" ? "liked" : "passed"}.`);
+      setStatusMessage(result.matched ? `You and ${profile.name} matched.` : direction === "LIKE" ? `You liked ${profile.name}.` : `You passed on ${profile.name}.`);
       if (result.matched && result.match) {
         setCelebration(result.match);
         setMatches((current) => current.some((item) => item.id === result.match?.id) ? current : [result.match!, ...current]);
