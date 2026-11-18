@@ -1,50 +1,45 @@
 # YUGORA — Gate 2 Persistence Delivery
 
-**Status: Complete.** Prisma 7.10.1 and SQLite persistence are committed to `main`. The GitHub Actions workflow validates and exercises the real SQLite database.
+**Status: Implemented and verified on GitHub Actions.** Gate 2 supplies Prisma 7.10.1 with SQLite persistence, repositories, a transactional Unit of Work, deterministic mock data, and real-database integration tests.
 
 ## Delivered
 
-- Prisma 7 schema with six normalized models: User, Profile, Interest, ProfileInterest, Swipe, and Match.
-- Initial SQLite migration with foreign keys, compound uniqueness, indexes, and CHECK constraints for adult-only profiles, no self-swipes, allowed directions, and canonical match order.
-- Prisma 7 `prisma-client` generator using the custom `src/generated/prisma` output path.
-- SQLite `better-sqlite3` driver adapter and server-side demo-user adapter.
-- Prisma repositories for profiles, directed swipes, and canonical matches.
-- Transactional Prisma Unit of Work injected into the existing Gate 1 use cases.
-- Atomic upsert behavior for directed swipe pairs and canonical match pairs.
-- A deterministic, idempotent seed with 30 fictional profiles and eight incoming LIKE Swipe rows targeting the demo user.
-- Real-SQLite integration tests for seed idempotency, feed eligibility and privacy, interests mapping, duplicate swipe/match prevention, transaction rollback, mutual-match creation, and database constraints.
-- README diagrams (architecture, ERD, mutual-match flow), editable Mermaid sources, branded cover artwork, and ownership documentation.
+- Six normalized Prisma models: `User`, `Profile`, `Interest`, `ProfileInterest`, `Swipe`, and `Match`.
+- Versioned SQLite migrations with foreign keys, uniqueness, indexes, and CHECK constraints.
+- Prisma 7 `prisma-client` generator and the `better-sqlite3` driver adapter.
+- Profile, Swipe, and Match repositories, plus a transaction-scoped Unit of Work.
+- An environment-based current-user adapter for the assignment's explicit single-logged-in-user/no-external-auth assumption. This is a demo adapter, not production authentication.
+- Idempotent seed data with 30 fictional profiles, profile interests, and eight incoming LIKE Swipe rows.
+- Actual SQLite integration tests for feed eligibility/privacy, seed idempotency, uniqueness, rollback, mutual matching, and database constraints.
+
+## Mutual-match integrity remediation
+
+A Match is valid only when both directed LIKE decisions are persisted:
+
+`LIKE(A, B) AND LIKE(B, A)`
+
+The rule is now defended at three boundaries:
+
+1. **Domain/application:** `RecordSwipeUseCase` evaluates reciprocal decisions before requesting Match creation.
+2. **Repository:** `PrismaMatchRepository.createIfAbsent` independently verifies both persisted LIKE rows through the supplied Prisma executor and throws `MatchInvariantViolationError` otherwise.
+3. **SQLite:** migration `20261118010000_enforce_mutual_match_integrity` adds triggers that reject invalid Match inserts/participant updates, prevent changing persisted swipe decisions, and remove a Match if either supporting Swipe is deleted.
+
+This closes the prior gap where a caller could insert a Match row directly without proving mutual interest. No `IncomingLike` table has been introduced.
 
 ## Verification
 
-GitHub Actions run: https://github.com/Manjeet2684/Yugora/actions/runs/44314085305
-
-- Prisma schema validation: passed.
-- Prisma Client generation: passed (7.10.1).
+- Prisma schema validation and Client generation: passed.
 - TypeScript type-check/build: passed.
-- Gate 1 architecture tests: 14 passed, 0 failed.
-- Seed run twice: 30 profiles and eight incoming demo likes each time, without duplicates.
-- Gate 2 persistence integration tests: 8 passed, 0 failed.
-- SQLite transaction rollback and CHECK constraints: passed.
+- Gate 1 architecture suite: 14 passed, 0 failed.
+- Seed executed twice: still 30 profiles and eight incoming demo likes, with no duplicate fixtures.
+- Gate 2 SQLite integration suite: 10 passed, 0 failed.
+- Direct SQLite trigger validation: invalid insert blocked, one-sided interest blocked, reciprocal LIKE accepted, swipe-decision mutation blocked, stale match removed after supporting LIKE deletion, and user cascade deletion succeeds.
 
-## Persistence decisions
+The GitHub Actions run for the integrity remediation commit is linked from the repository's Actions tab.
 
-### One Swipe table, not IncomingLike
+## Deliberately deferred
 
-Incoming interest is represented as a Swipe authored by the other profile owner and targeted at the demo user. Feed eligibility filters only Swipe rows authored by the current viewer. That makes one-sided interest private and preserves the assignment's mutual-only promise.
-
-### Match creation
-
-A Match is stored only when the application layer has confirmed reciprocal LIKE decisions. The participants are normalized into lexicographically ordered `userLowId` and `userHighId` columns, then protected by a unique compound index and SQLite CHECK constraint.
-
-### Transaction boundary
-
-`PrismaUnitOfWork` wraps the existing `RecordSwipeUseCase` callback in one interactive Prisma transaction. Swipe insert, reciprocal decision lookup, and Match creation therefore commit or roll back as one unit.
-
-## Not part of Gate 2
-
-- The HTTP Route Handlers for `GET /feed`, `POST /swipe`, and `GET /matches` (Gate 3).
-- Next.js UI, profile-card interactions, drag gestures, animation, and Matches screen (Gate 4).
-- Playwright/browser, accessibility, and responsive regression checks (Gate 5).
-
-These are intentionally not described as implemented in this delivery.
+- HTTP Route Handlers for `GET /feed`, `POST /swipe`, and `GET /matches` (Gate 3).
+- Multi-user authentication; the assignment explicitly permits a single assumed logged-in user and no external auth.
+- Next.js screens, gestures, animation, and Matches UI (Gate 4).
+- Playwright, accessibility, responsive and full browser QA (Gate 5).

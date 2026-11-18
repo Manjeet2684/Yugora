@@ -45,3 +45,11 @@ These tests exercise domain and application behavior through in-memory adapters.
 - Mobile drag and desktop button paths must use the same mutation.
 - Reduced-motion and keyboard controls must remain functional.
 - Simulate image, feed, swipe, and matches failures independently.
+
+
+## Gate 2 mutual-match integrity regression coverage
+
+- Repository refuses match creation without two persisted reciprocal LIKE decisions.
+- SQLite triggers reject direct invalid Match inserts and invalid participant updates.
+- Persisted Swipe actor/target/direction fields cannot be mutated.
+- Removing a supporting Swipe removes the associated Match.

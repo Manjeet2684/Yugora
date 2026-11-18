@@ -35,3 +35,13 @@ export class MatchedProfileNotFoundError extends ApplicationError {
     super("A matched participant profile could not be resolved.", "MATCH_PROFILE_INVARIANT_BROKEN");
   }
 }
+
+/** Raised when persistence is asked to store a match without two persisted LIKE decisions. */
+export class MatchInvariantViolationError extends ApplicationError {
+  constructor() {
+    super(
+      "A match can only be persisted after both participants have recorded a LIKE.",
+      "MATCH_INVARIANT_VIOLATION",
+    );
+  }
+}

@@ -98,7 +98,7 @@ async function main(): Promise<void> {
     const actorUserId = `yugora-user-${profile.slug}`;
     await prisma.swipe.upsert({
       where: { actorUserId_targetUserId: { actorUserId, targetUserId: demoUserId } },
-      update: { direction: "LIKE" },
+      update: {},
       create: { actorUserId, targetUserId: demoUserId, direction: "LIKE" },
     });
   }

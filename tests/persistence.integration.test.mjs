@@ -121,6 +121,16 @@ test('Match upsert stores a canonical pair once and lists it for both participan
   const secondUserId = asUserId(unique('match-b'));
   await ensureUser(firstUserId);
   await ensureUser(secondUserId);
+  const swipeRepository = new PrismaSwipeRepository(prisma);
+  for (const [actorUserId, targetUserId] of [[firstUserId, secondUserId], [secondUserId, firstUserId]]) {
+    await swipeRepository.createIfAbsent(createSwipeDecision({
+      id: asSwipeId(unique('mutual-swipe')),
+      actorUserId,
+      targetUserId,
+      direction: 'LIKE',
+      createdAt: new Date(),
+    }));
+  }
   const repository = new PrismaMatchRepository(prisma);
   const match = createMatch({
     id: asMatchId(unique('match')),
@@ -216,4 +226,102 @@ test('database CHECK constraints reject self-swipes and unsupported directions',
   await assert.rejects(() => prisma.swipe.create({
     data: { actorUserId: userId, targetUserId: secondUserId, direction: 'MAYBE' },
   }));
+});
+
+
+test('Match repository refuses to create a match without two persisted LIKE decisions', async () => {
+  const firstUserId = asUserId(unique('integrity-a'));
+  const secondUserId = asUserId(unique('integrity-b'));
+  await ensureUser(firstUserId);
+  await ensureUser(secondUserId);
+  const repository = new PrismaMatchRepository(prisma);
+  const match = createMatch({
+    id: asMatchId(unique('invalid-match')),
+    participantA: firstUserId,
+    participantB: secondUserId,
+    matchedAt: new Date(),
+  });
+
+  await assert.rejects(
+    () => repository.createIfAbsent(match),
+    { name: 'MatchInvariantViolationError', code: 'MATCH_INVARIANT_VIOLATION' },
+  );
+  assert.equal(await prisma.match.count({ where: { OR: [
+    { userLowId: firstUserId, userHighId: secondUserId },
+    { userLowId: secondUserId, userHighId: firstUserId },
+  ] } }), 0);
+
+  const swipeRepository = new PrismaSwipeRepository(prisma);
+  await swipeRepository.createIfAbsent(createSwipeDecision({
+    id: asSwipeId(unique('one-sided-like')),
+    actorUserId: firstUserId,
+    targetUserId: secondUserId,
+    direction: 'LIKE',
+    createdAt: new Date(),
+  }));
+  await assert.rejects(
+    () => repository.createIfAbsent(match),
+    { name: 'MatchInvariantViolationError', code: 'MATCH_INVARIANT_VIOLATION' },
+  );
+});
+
+test('SQLite trigger blocks direct invalid Match inserts and deletes stale matches when a LIKE is removed', async () => {
+  const firstUserId = asUserId(unique('trigger-a'));
+  const secondUserId = asUserId(unique('trigger-b'));
+  const thirdUserId = asUserId(unique('trigger-c'));
+  await ensureUser(firstUserId);
+  await ensureUser(secondUserId);
+  await ensureUser(thirdUserId);
+  const matchId = unique('trigger-match');
+
+  await assert.rejects(() => prisma.match.create({
+    data: { id: matchId, userLowId: firstUserId, userHighId: secondUserId },
+  }));
+
+  const swipeRepository = new PrismaSwipeRepository(prisma);
+  await swipeRepository.createIfAbsent(createSwipeDecision({
+    id: asSwipeId(unique('trigger-one-sided')),
+    actorUserId: firstUserId,
+    targetUserId: secondUserId,
+    direction: 'LIKE',
+    createdAt: new Date(),
+  }));
+  await assert.rejects(() => prisma.match.create({
+    data: { id: unique('one-sided-direct-match'), userLowId: firstUserId, userHighId: secondUserId },
+  }));
+  const incoming = createSwipeDecision({
+    id: asSwipeId(unique('trigger-incoming')),
+    actorUserId: secondUserId,
+    targetUserId: firstUserId,
+    direction: 'LIKE',
+    createdAt: new Date(),
+  });
+  await swipeRepository.createIfAbsent(incoming);
+
+  await prisma.match.create({
+    data: { id: matchId, userLowId: firstUserId < secondUserId ? firstUserId : secondUserId,
+      userHighId: firstUserId < secondUserId ? secondUserId : firstUserId },
+  });
+  assert.equal(await prisma.match.count({ where: { id: matchId } }), 1);
+
+  await assert.rejects(() => prisma.match.update({
+    where: { id: matchId },
+    data: { userHighId: thirdUserId },
+  }));
+
+  await assert.rejects(() => prisma.swipe.update({
+    where: { actorUserId_targetUserId: {
+      actorUserId: firstUserId,
+      targetUserId: secondUserId,
+    } },
+    data: { direction: 'PASS' },
+  }));
+
+  await prisma.swipe.delete({
+    where: { actorUserId_targetUserId: {
+      actorUserId: secondUserId,
+      targetUserId: firstUserId,
+    } },
+  });
+  assert.equal(await prisma.match.count({ where: { id: matchId } }), 0);
 });

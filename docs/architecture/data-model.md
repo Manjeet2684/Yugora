@@ -17,6 +17,8 @@
 4. Only `RecordSwipeUseCase` decides whether reciprocal LIKE creates a match.
 5. The Unit of Work wraps outgoing Swipe persistence, reciprocal decision lookup, and Match creation in one interactive Prisma transaction.
 6. Unique indexes prevent duplicate directed decisions and duplicate participant pairs. SQLite CHECK constraints additionally enforce no self-swipe, allowed direction values, adult profile age, and canonical match ordering.
+7. SQLite triggers prevent inserting/updating a Match unless both directed LIKE rows exist.
+8. Persisted swipe actor, target, and direction fields are immutable; deleting either supporting swipe automatically removes the pair's Match, including during account/profile-owner cleanup.
 
 The CHECK constraints are authored in the SQL migration because Prisma's SQLite schema model does not express arbitrary CHECK predicates. Preserve them when editing or regenerating migrations.
 

@@ -1,6 +1,6 @@
 # YUGORA — Gate 1 Delivery Report
 
-**Status: Complete locally; published to the YUGORA GitHub repository.**
+**Status: Complete and published to the YUGORA GitHub repository.**
 
 ## Included
 
@@ -30,8 +30,9 @@ Result:
 - Node architecture tests: **14 passed, 0 failed**.
 - Domain/application dependency scan: **passed**; no Next.js, React, Prisma, or SQLite imports found in the core.
 - ZIP integrity validation: **passed**.
+- GitHub Actions verification: **passed** on the published Gate 1 source commit.
 
-The architecture tests use in-memory test adapters. They verify core use-case behavior and do not claim to validate a real SQLite database, Prisma transaction, HTTP route, browser UI, or animation. Those are explicitly deferred to Gates 2–5.
+The architecture tests use in-memory test adapters. They verify core use-case behavior and do not claim to validate a real SQLite database or Prisma transaction; those were added and verified in Gate 2. HTTP routes, browser UI, and animations remain deferred to Gates 3–4.
 
 ## Deferred by design
 

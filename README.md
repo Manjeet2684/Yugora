@@ -55,12 +55,12 @@ This is a standalone implementation of the Coy SDE Intern assignment. It has a b
 | Gate | Deliverable | Status |
 |---|---|---|
 | **1 · Architecture** | Domain entities, policies, use cases, ports, API contracts, ADRs, architecture tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **2 · Persistence** | Prisma 7, SQLite schema/migration, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, real-database tests | <img alt="In progress" src="https://img.shields.io/badge/implementation-7b684b" /> |
+| **2 · Persistence** | Prisma 7, SQLite schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **3 · Backend** | `GET /feed`, `POST /swipe`, `GET /matches`, validation, error mapping, HTTP integration/privacy tests | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 | **4 · Frontend** | Mobile-first Discover, drag gestures, Like/Pass controls, match moment, Matches view, empty/error states | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 | **5 · Quality** | E2E, concurrency/privacy regression, responsive and accessibility verification, final demo docs | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 
-Current implementation status is intentionally explicit: **Gates 1 and 2 are complete**. The domain/application layer and the Prisma/SQLite persistence layer are committed and passing CI. HTTP routes and the visual app are later gates, not represented as finished here.
+Gates 1 and 2 are complete and committed. The domain/application layer and Prisma/SQLite persistence are covered by automated tests. HTTP routes and the visual app are later gates, not represented as finished here.
 
 ## System architecture
 
@@ -158,6 +158,9 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 | One profile per owner | `UNIQUE(Profile.ownerUserId)` |
 | One match per unordered pair | Canonical pair + unique `(userLowId, userHighId)` |
 | Canonical match order | SQLite `CHECK(userLowId < userHighId)` |
+| Match requires two reciprocal LIKEs | Repository guard + SQLite insert/update triggers |
+| Persisted Swipe decision cannot be changed | SQLite immutability trigger |
+| Removing a supporting Swipe cannot leave a stale Match | SQLite delete trigger removes that pair's Match |
 | Profile-interest many-to-many | Composite primary key `(profileId, interestId)` |
 
 > SQLite CHECK predicates are authored in the SQL migration because arbitrary CHECK constraints are not represented in the Prisma schema DSL. Preserve these constraints when evolving migrations. See [`docs/architecture/data-model.md`](docs/architecture/data-model.md).
@@ -175,7 +178,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 ## Getting started
 
-**Requirements:** Node.js `>=20.19` (Node 22 recommended) and npm. `better-sqlite3` uses a native Node add-on; use a supported Node version for your platform.
+**Requirements:** Node.js 22 and npm. The current-user adapter follows the assignment's explicit assumption of one already-logged-in demo user and no external authentication; it is not production authentication. `better-sqlite3` uses a native Node add-on; use a supported Node version for your platform.
 
 ```bash
 # 1. Clone the repository
@@ -219,7 +222,7 @@ The application-layer contracts already define the three operations; HTTP Route 
 - `GET /feed` excludes all profiles previously swiped on by the demo user, whether the decision was LIKE or PASS.
 - A profile's incoming LIKE does not remove it from the demo user's feed and is not serialized in the profile DTO.
 - `POST /swipe` is idempotent for the same directed decision and rejects an incompatible second decision.
-- A match is inserted only when two reciprocal LIKE decisions exist.
+- A match is inserted only when two reciprocal LIKE decisions exist. The repository checks both rows and SQLite triggers independently reject invalid matches.
 - `GET /matches` reads the persisted Match table only; no match is inferred from one-sided interest.
 
 ## Codebase map
@@ -264,13 +267,16 @@ The application-layer contracts already define the three operations; HTTP Route 
 - [Prisma Unit of Work](src/modules/discovery/infrastructure/persistence/prisma/prisma-unit-of-work.ts)
 - [Prisma schema](prisma/schema.prisma)
 - [Initial migration](prisma/migrations/20261118000000_init/migration.sql)
+- [Mutual-match integrity migration](prisma/migrations/20261118010000_enforce_mutual_match_integrity/migration.sql)
+- [Match invariant error](src/modules/discovery/application/errors/application-errors.ts)
+- [ADR-004: mutual-match persistence invariant](docs/architecture/decisions/ADR-004-mutual-match-database-invariant.md)
 - [Deterministic seed](prisma/seed.ts)
 
 ## Quality gates
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and full mutual-match creation. The latest successful CI run passed 14 architecture tests and 8 persistence integration tests. HTTP and browser acceptance tests are added in their respective gates.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. HTTP and browser acceptance tests are added in their respective gates.
 
 ## Copyright and attribution
 

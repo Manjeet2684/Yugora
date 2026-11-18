@@ -21,6 +21,14 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies and generate Prisma Client
-        run: npm install --no-audit --no-fund
+        run: npm install --no-fund
+      - name: Audit the resolved dependency tree
+        run: npm audit --audit-level=high
       - name: Validate schema, type-check, migrate, seed twice and test
         run: npm run check
+      - name: Upload generated dependency lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: yugora-package-lock
+          path: package-lock.json
+          if-no-files-found: error
