@@ -140,24 +140,42 @@ test("keyboard arrows use the same Like/Pass API mutation", async ({ page }) => 
   ]);
 });
 
-test("mobile-width pointer drag follows the same swipe mutation", async ({ page }) => {
-  const server = await openDiscover(page);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator(".mobile-navigation")).toBeVisible();
-  await expect(page.locator(".sidebar")).toBeHidden();
-  const card = page.locator(".profile-card");
-  const bounds = await card.boundingBox();
-  expect(bounds).not.toBeNull();
-  const startX = bounds.x + bounds.width / 2;
-  const startY = bounds.y + bounds.height / 2;
-  await page.mouse.move(startX, startY);
-  await page.mouse.down();
-  await page.mouse.move(startX - 165, startY, { steps: 8 });
-  await page.mouse.up();
-  await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
-  expect(server.swipeRequests).toEqual([{ profileId: profileA.id, direction: "PASS" }]);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-  expect(overflow).toBe(false);
+test("real mobile touch drag follows the same swipe mutation", async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: "http://127.0.0.1:3100",
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  try {
+    await page.addInitScript(() => {
+      window.__yugoraPointerTypes = [];
+      window.addEventListener("pointerdown", (event) => window.__yugoraPointerTypes.push(event.pointerType), true);
+    });
+    const server = await openDiscover(page);
+    await expect(page.locator(".mobile-navigation")).toBeVisible();
+    await expect(page.locator(".sidebar")).toBeHidden();
+    const card = page.locator(".profile-card");
+    const bounds = await card.boundingBox();
+    expect(bounds).not.toBeNull();
+    const startX = bounds.x + bounds.width / 2;
+    const startY = bounds.y + bounds.height / 2;
+    const touch = await context.newCDPSession(page);
+    const touchPoint = (x) => ({ x, y: startY, id: 1, radiusX: 4, radiusY: 4, force: 1 });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [touchPoint(startX)] });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [touchPoint(startX - 165)] });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
+    expect(server.swipeRequests).toEqual([{ profileId: profileA.id, direction: "PASS" }]);
+    const pointerTypes = await page.evaluate(() => window.__yugoraPointerTypes);
+    expect(pointerTypes).toContain("touch");
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(overflow).toBe(false);
+  } finally {
+    await context.close();
+  }
 });
 
 test("a persisted server decision stays out of the feed after reload", async ({ page }) => {
