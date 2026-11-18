@@ -29,7 +29,8 @@
     "start": "next start",
     "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
-    "test:copyright": "node --test tests/copyright-headers.test.mjs"
+    "test:copyright": "node --test tests/copyright-headers.test.mjs",
+    "lock:normalize": "node scripts/normalize-package-lock.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
