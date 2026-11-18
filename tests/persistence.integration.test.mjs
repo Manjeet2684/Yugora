@@ -48,6 +48,16 @@ after(async () => {
 
 test('seed is repeatable and includes at least 30 mock profiles with incoming demo likes', async () => {
   const seededProfiles = await prisma.profile.count({ where: { id: { startsWith: 'yugora-profile-' } } });
+  const seededPhotoUrls = await prisma.profile.findMany({
+    where: { id: { startsWith: 'yugora-profile-' } },
+    select: { photoUrl: true },
+  });
+  assert.equal(seededPhotoUrls.length, 30);
+  assert.ok(
+    seededPhotoUrls.every(({ photoUrl }) => photoUrl.startsWith('data:image/svg+xml;charset=UTF-8,')),
+    'seeded demo photos must be local data URLs rather than third-party image hosts',
+  );
+
   const incomingLikes = await prisma.swipe.count({
     where: { targetUserId: process.env.DEMO_USER_ID ?? 'demo-user', direction: 'LIKE' },
   });
