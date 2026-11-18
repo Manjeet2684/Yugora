@@ -60,7 +60,7 @@ This is a standalone implementation of the Coy SDE Intern assignment. It has a b
 | **4 · Frontend** | Mobile-first Discover, drag gestures, Like/Pass controls, match moment, Matches view, empty/error states | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 | **5 · Quality** | E2E, concurrency/privacy regression, responsive and accessibility verification, final demo docs | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 
-Current implementation status is intentionally explicit: the domain/application layer is complete; the Prisma/SQLite persistence layer is being added in Gate 2. HTTP routes and the visual app are later gates, not represented as finished here.
+Current implementation status is intentionally explicit: **Gates 1 and 2 are complete**. The domain/application layer and the Prisma/SQLite persistence layer are committed and passing CI. HTTP routes and the visual app are later gates, not represented as finished here.
 
 ## System architecture
 
@@ -270,7 +270,7 @@ The application-layer contracts already define the three operations; HTTP Route 
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, and transaction rollback. HTTP and browser acceptance tests are added in their respective gates.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and full mutual-match creation. The latest successful CI run passed 14 architecture tests and 8 persistence integration tests. HTTP and browser acceptance tests are added in their respective gates.
 
 ## Copyright and attribution
 
