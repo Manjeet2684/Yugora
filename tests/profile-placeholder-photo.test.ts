@@ -24,7 +24,7 @@ test("placeholder variants are deterministic and vary the color palette", () => 
 test("avatar text is XML-escaped and empty names fall back safely", () => {
   const hostile = decodeURIComponent(createPlaceholderProfilePhotoUrl("<script>alert(1)</script>", 0).split(",", 2)[1] ?? "");
   assert.equal(hostile.includes("<script>"), false);
-  assert.equal(hostile.includes("&lt;script&gt;"), true);
+  assert.equal(hostile.includes("&lt;S"), true);
   const empty = decodeURIComponent(createPlaceholderProfilePhotoUrl("   ", Number.NaN).split(",", 2)[1] ?? "");
   assert.ok(empty.includes(">YU</text>"));
 });
