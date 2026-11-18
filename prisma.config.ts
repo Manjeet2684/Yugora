@@ -5,11 +5,7 @@ import { defineConfig } from "prisma/config";
 const LOCAL_POSTGRES_URL =
   "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public";
 
-type MigrationEnvironment = {
-  DATABASE_URL_UNPOOLED?: string;
-  DIRECT_URL?: string;
-  DATABASE_URL?: string;
-};
+type MigrationEnvironment = Readonly<Record<string, string | undefined>>;
 
 /**
  * Neon/Vercel exposes DATABASE_URL_UNPOOLED for direct Prisma CLI operations.
