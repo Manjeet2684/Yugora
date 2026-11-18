@@ -15,6 +15,19 @@ WHERE NOT EXISTS (
       AND outgoing."direction" = 'LIKE'
 );
 
+-- A boolean-returning wrapper allows Prisma's typed raw-query decoder to
+-- consume the lock result while PostgreSQL still holds the lock to transaction end.
+CREATE OR REPLACE FUNCTION yugora_acquire_pair_lock(lock_namespace INTEGER, lock_key INTEGER)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public
+AS $
+BEGIN
+    PERFORM pg_advisory_xact_lock(lock_namespace, lock_key);
+    RETURN TRUE;
+END;
+$;
+
 CREATE OR REPLACE FUNCTION yugora_enforce_match_reciprocal_like()
 RETURNS TRIGGER
 LANGUAGE plpgsql
