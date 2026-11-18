@@ -1,6 +1,6 @@
 # YUGORA Quality and Regression Test Plan
 
-> The SQLite language below records the original Gate 2/3 test baseline. The current `feature/postgres-production-hardening` branch executes persistence, HTTP and browser integration against PostgreSQL 16. Its latest verified code run is [44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084): 65 tests passed, including the exact Vercel migration/seed/build command and 16 Chromium journeys.
+> The SQLite language below records the original Gate 2/3 test baseline. The current `feature/postgres-production-hardening` branch executes persistence, HTTP and browser integration against PostgreSQL 16. The earlier verified run [44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084) passed 65 tests, including the exact Vercel migration/seed/build command and 16 Chromium journeys. The latest additions test UTF-8 match ordering, emoji avatars and malformed surrogate request IDs; final CI is pending.
 
 ## Gate 1 — Architecture (in-memory adapters)
 
@@ -63,7 +63,7 @@
 
 ### Public release blockers (not signed off)
 - [ ] Replace the shared assignment demo identity with real per-user authentication/authorization.
-- [x] Configure an active Vercel IP-based rate limit (20 requests / 60 seconds) for `GET /feed`, `POST /swipe`, and `GET /matches`.
+- [x] Configure an active Vercel IP-based rate limit (60 requests / 60 seconds) for `GET /feed`, `POST /swipe`, and `GET /matches`.
 - [ ] Verify HTTP 429 behavior against a protected deployed Preview.
 - [x] Create and link the Vercel project; SSO deployment protection is enabled.
 - [ ] Connect Neon, deploy a protected Preview, and verify secrets/branching/persistence.
