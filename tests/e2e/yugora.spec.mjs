@@ -64,9 +64,10 @@ async function stubApi(page, options = {}) {
 }
 
 async function openDiscover(page, options = {}) {
-  await stubApi(page, options);
+  const server = await stubApi(page, options);
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  return server;
 }
 
 test("opens Discover with one profile card and accessible Like/Pass actions", async ({ page }) => {
@@ -186,7 +187,7 @@ test("feed failure is distinct and can be retried", async ({ page }) => {
 test("swipe failure preserves the active card and allows retry", async ({ page }) => {
   const server = await openDiscover(page, { swipeFailsOnce: true });
   await page.getByRole("button", { name: "Like this profile" }).click();
-  await expect(page.getByRole("alert")).toContainText("could not be saved");
+  await expect(page.locator(".toast-error")).toContainText("could not be saved");
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
   await page.getByRole("button", { name: "Like this profile" }).click();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
@@ -202,7 +203,7 @@ test("matches failure has a separate retry path", async ({ page }) => {
 });
 
 test("broken profile photo falls back to the profile initial", async ({ page }) => {
-  await page.route("https://images.example.test/**", (route) => route.abort());
+  await page.route("https://i.pravatar.cc/**", (route) => route.abort());
   await openDiscover(page);
   await expect(page.locator(".profile-card .profile-image img")).toHaveCount(0);
   await expect(page.locator(".profile-card .profile-image-fallback")).toBeVisible();
