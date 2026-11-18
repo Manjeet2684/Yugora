@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -42,31 +42,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Resolve and lock PostgreSQL adapter dependency graph
-        run: npm install --package-lock-only --ignore-scripts --no-fund --no-audit
-      - name: Preserve original project author metadata in lockfile
-        run: npm run lock:normalize
-      - name: Commit generated lockfile for same-repository pull requests
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          if git diff --quiet -- package-lock.json; then
-            echo "package-lock.json is already synchronized."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "build: refresh PostgreSQL dependency lockfile"
-          git push origin "HEAD:${BRANCH}"
-      - name: Preserve generated lockfile for review
-        uses: actions/upload-artifact@v4
-        with:
-          name: yugora-postgresql-package-lock
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 7
       - name: Install locked dependencies and generate Prisma Client
         run: npm ci --no-fund
       - name: Audit the resolved dependency tree
