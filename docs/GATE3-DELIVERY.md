@@ -1,5 +1,7 @@
 # YUGORA — Gate 3 Backend API Delivery
 
+> **Historical implementation note:** This report records the original SQLite-backed Gate 3 verification. The current `feature/postgres-production-hardening` branch runs the same API boundary over PostgreSQL; see `docs/GATE5-DELIVERY.md` for current persistence and browser verification.
+
 **Status: Implemented and verified by GitHub Actions.**
 
 ## Delivered
