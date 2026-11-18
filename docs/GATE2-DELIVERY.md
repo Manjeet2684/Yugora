@@ -1,5 +1,7 @@
 # YUGORA — Gate 2 Persistence Delivery
 
+> **Historical implementation note:** Gate 2 was first delivered and tested with SQLite. The current `feature/postgres-production-hardening` branch re-platforms the Prisma adapter, SQL migrations, constraints and triggers to PostgreSQL. Use `docs/GATE5-DELIVERY.md` and `docs/SECURITY-REVIEW.md` for the current branch and hosted-release state.
+
 **Status: Implemented and verified on GitHub Actions.** Gate 2 supplies Prisma 7.10.1 with SQLite persistence, repositories, a transactional Unit of Work, deterministic mock data, and real-database integration tests.
 
 ## Delivered
