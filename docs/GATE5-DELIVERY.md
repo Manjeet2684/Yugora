@@ -1,6 +1,6 @@
 # YUGORA — Gate 5 Browser QA and Release Review
 
-**CI status:** Browser QA implementation is included in the Gate 5 commit; verify the linked Actions run for the final result.
+**CI status:** Passed. [Final verified GitHub Actions run](https://github.com/Manjeet2684/Yugora/actions/runs/44365785154), commit `d11b72e167c1f9517f4380bad3c2b9d635574108`.
 
 ## Browser test approach
 
@@ -14,7 +14,7 @@ Playwright Test 1.65.1 drives Chromium against the built Next.js production serv
 - Pass and one-sided Like submit their correct profile/direction payloads.
 - Mutual Like opens the dialog only when the server returns a Match DTO; the Matches page renders that match.
 - Match dialog receives focus, traps keyboard focus, closes with Escape, and restores prior focus when it remains available.
-- Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated devices submit the same swipe shape as action buttons.
+- Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated device submit the same swipe shape as action buttons.
 - Deterministic fixture-backed reload behaviour is covered separately from the unmocked SQLite-backed persistence journey.
 - Empty feed, broken image, feed error, swipe error and Matches error have independent retry/fallback tests.
 - Mobile navigation is visible, the desktop sidebar is hidden, the card remains in viewport and the page has no horizontal overflow at 390px.

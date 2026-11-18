@@ -14,7 +14,7 @@
     "build:architecture": "tsc",
     "test:architecture": "npm run build:architecture && node --test tests/architecture.test.mjs",
     "test:persistence": "npm run db:deploy && npm run db:seed && npm run db:seed && node --test tests/persistence.integration.test.mjs",
-    "check": "npm run db:validate && npm run typecheck && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui",
+    "check": "npm run db:validate && npm run typecheck && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui && npm run test:copyright",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
@@ -28,7 +28,8 @@
     "build:next": "next build",
     "start": "next start",
     "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
-    "test:e2e": "playwright test --config=playwright.config.mjs"
+    "test:e2e": "playwright test --config=playwright.config.mjs",
+    "test:copyright": "node --test tests/copyright-headers.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
@@ -48,5 +49,6 @@
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
-  }
+  },
+  "author": "Manjeet2684"
 }

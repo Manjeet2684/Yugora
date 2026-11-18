@@ -80,6 +80,11 @@ The application now emits a baseline Content Security Policy and browser securit
 
 **Release blockers remain explicit:** `DEMO_USER_ID` represents a shared assignment demo account, not individual authentication; durable production rate limiting and abuse controls are not implemented; no hosting platform, domain, HTTPS certificate, secrets or monitoring target has been configured. Do not treat a successful CI/browser pass as a public-production deployment approval.
 
+
+## Part A — Product recommendations
+
+Two preliminary Coy feature recommendations and their privacy guardrails are recorded in [Part A product recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md). They are based on the public product description and Terms, not a claimed private-app walkthrough. The required OTP, add-crush, email-verification, invite-link and extra-slots walkthrough still needs applicant validation.
+
 ## System architecture
 
 <img src="docs/assets/architecture.svg" alt="YUGORA hexagonal architecture from inbound adapters through application and domain contracts to Prisma repositories and SQLite" width="100%" />
@@ -183,6 +188,11 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 > SQLite CHECK predicates are authored in the SQL migration because arbitrary CHECK constraints are not represented in the Prisma schema DSL. Preserve these constraints when evolving migrations. See [`docs/architecture/data-model.md`](docs/architecture/data-model.md).
 
+
+## Security review and Vercel readiness
+
+The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel storage assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The current SQLite adapter is suitable for local/CI assignment evaluation, not durable Vercel Function storage. A managed database migration and durable rate limiting are required before public deployment.
+
 ## Technology choices
 
 | Area | Choice | Responsibility |
@@ -240,7 +250,7 @@ The seed command is designed to be repeatable. It creates 30 fictional profiles 
 
 ## API behaviour and privacy contract
 
-The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite. The Next.js service is runnable; the interactive Discover experience and Matches UI remain Gate 4. The persistence layer must support the following behaviour:
+The Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite. The interactive Discover and Matches UI is implemented in Gate 4 and browser-tested in Gate 5. The persistence layer must support the following behaviour:
 
 - `GET /feed` excludes all profiles previously swiped on by the demo user, whether the decision was LIKE or PASS.
 - A profile's incoming LIKE does not remove it from the demo user's feed and is not serialized in the profile DTO.
@@ -279,8 +289,11 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
   │       ├── database/                # Prisma client and demo-user adapter
   │       └── http/                    # Warm-process route application singleton
   │   └── shared/contracts/            # Transport-neutral API contracts
-  ├── next.config.ts               # Node.js native SQLite adapter externalization
+  ├── next.config.ts               # Security headers and native SQLite adapter externalization
+  ├── playwright.config.mjs        # Production-server browser testing
   ├── tests/
+  │   ├── copyright-headers.test.mjs
+  │   ├── e2e/yugora.spec.mjs
   │   ├── architecture.test.mjs       # In-memory core tests
   │   ├── persistence.integration.test.mjs
   │   ├── http.integration.test.mjs   # Real-SQLite HTTP adapter tests
@@ -290,6 +303,7 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
   │   ├── diagrams/                   # Editable Mermaid diagram source
   │   └── architecture/               # Design decisions and data-model notes
   ├── COPYRIGHT.md
+  ├── AUTHORS.md
   └── README.md
   ```
 </details>
@@ -318,11 +332,11 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. CI installs from the committed npm lockfile and runs `npm audit --audit-level=high` before tests. HTTP handlers are covered by a real-SQLite integration suite in Gate 3. Browser acceptance tests are added in Gates 4–5.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-SQLite HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. One browser journey is unmocked and verifies a mutual match persists across a real SQLite-backed page reload.
 
 ## Copyright and attribution
 
-**YUGORA original project work — Copyright © 2026 Manjeet2684. All rights reserved.** This repository is public for review and portfolio evaluation; public visibility does not grant permission to reuse the original code, schema, diagrams, documentation, or visual assets. Third-party packages and externally hosted placeholder photos remain under their respective owners' licences and terms. See [`COPYRIGHT.md`](COPYRIGHT.md) and [`LICENSE`](LICENSE).
+**YUGORA original project work — Copyright © 2026 Manjeet2684. All rights reserved.** This repository is public for review and portfolio evaluation; public visibility does not grant permission to reuse the original code, schema, diagrams, documentation, or visual assets. Third-party packages and externally hosted placeholder photos remain under their respective owners' licences and terms. See [`COPYRIGHT.md`](COPYRIGHT.md), [`AUTHORS.md`](AUTHORS.md), and [`LICENSE`](LICENSE).
 
 ---
 
