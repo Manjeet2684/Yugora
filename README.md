@@ -199,6 +199,9 @@ npm run db:seed
 
 # 5. Run schema, type, architecture and real-SQLite checks
 npm run check
+
+# 6. Start the Next.js service locally
+npm run dev
 ```
 
 The seed command is designed to be repeatable. It creates 30 fictional profiles and eight incoming LIKE decisions targeting the demo user. Re-running it will not duplicate users, profiles, tags, or directed swipes.

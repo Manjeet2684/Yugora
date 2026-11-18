@@ -13,6 +13,7 @@ jobs:
     env:
       DATABASE_URL: file:./prisma/yugora-ci.db
       DEMO_USER_ID: demo-user
+      NEXT_TELEMETRY_DISABLED: 1
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -21,14 +22,8 @@ jobs:
         with:
           node-version: 22
       - name: Install locked dependencies and generate Prisma Client
-        run: npm install --no-fund
+        run: npm ci --no-fund
       - name: Audit the resolved dependency tree
         run: npm audit --audit-level=high
       - name: Validate schema, type-check, migrate, seed twice and test
         run: npm run check
-      - name: Upload refreshed dependency lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: yugora-next-package-lock
-          path: package-lock.json
-          if-no-files-found: error

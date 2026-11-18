@@ -36,7 +36,7 @@ The original assignment explicitly requires no external auth and assumes one log
 
 ## Verified CI results
 
-Workflow run: https://github.com/Manjeet2684/Yugora/actions/runs/44325533778
+Workflow run: https://github.com/Manjeet2684/Yugora/actions/runs/44326328513
 
 - Dependency installation: passed.
 - `npm audit --audit-level=high`: zero vulnerabilities reported.
@@ -44,4 +44,6 @@ Workflow run: https://github.com/Manjeet2684/Yugora/actions/runs/44325533778
 - Architecture tests: 14 passed, 0 failed.
 - SQLite persistence tests: 10 passed, 0 failed.
 - HTTP integration tests: 8 passed, 0 failed.
-- The actual Next.js-compatible route module exports were imported and invoked by the integration suite.
+- The actual Next.js Route Handler exports were imported and invoked by the integration suite.
+- Next.js 16.4.6 production build: compiled successfully and generated static pages.
+- React 19.3.1 and Next.js 16.4.6 are installed from a committed npm lockfile; CI uses `npm ci`.
