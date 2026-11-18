@@ -94,6 +94,7 @@ class InMemoryStore {
             profiles: this.profileRepository,
             swipes: this.swipeRepository,
             matches: this.matchRepository,
+            lockPair: async () => undefined,
           });
         } catch (error) {
           this.swipes = swipeSnapshot;
