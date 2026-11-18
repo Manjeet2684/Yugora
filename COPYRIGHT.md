@@ -1,0 +1,11 @@
+# Copyright and ownership
+
+Copyright (c) 2026 Manjeet2684. All rights reserved.
+
+The YUGORA-specific source code, database schema, migrations, seed fixtures, documentation, diagrams, and visual assets in this repository are original project work authored for the YUGORA assignment.
+
+No permission or licence is granted to copy, modify, redistribute, sublicense, or commercially use those original materials without prior written permission from the copyright holder. The repository is public for review and portfolio evaluation; public visibility does not place the work in the public domain.
+
+Third-party packages, frameworks, drivers, and any externally hosted placeholder imagery remain the property of their respective authors and are governed by their own licences and terms. This notice does not claim ownership of third-party materials.
+
+For permissions, contact the repository owner through the GitHub profile: [@Manjeet2684](https://github.com/Manjeet2684).

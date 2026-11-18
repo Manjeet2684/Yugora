@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { MatchId, UserId } from "../values/identifiers.js";
 
 /** A match stores its participant pair in a stable, order-independent form. */

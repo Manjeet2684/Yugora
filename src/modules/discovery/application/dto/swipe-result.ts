@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { MatchDto } from "./discovery-dto.js";
 
 export interface SwipeResult {

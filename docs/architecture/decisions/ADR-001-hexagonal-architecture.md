@@ -1,18 +1,19 @@
-# ADR-001: Hexagonal Architecture
+# ADR-001: Use Hexagonal Architecture for the Discovery Core
 
-**Status:** Accepted
+- **Status:** Accepted
+- **Decision:** Gate 1
 
 ## Context
 
-The assignment combines discovery behavior, matching rules, HTTP operations, and persistent storage. Mixing these concerns would make privacy and transactional rules difficult to test independently.
+The assignment requires a small consumer-facing application but evaluates backend correctness, privacy edge cases, and clean tested logic. A direct coupling between route handlers, ORM models, and React components would make business behavior difficult to test and easy to duplicate.
 
 ## Decision
 
-Use Hexagonal Architecture (Ports and Adapters). The domain expresses entities and policies. The application layer coordinates use cases through ports. Infrastructure provides adapters for persistence and framework integration. UI and HTTP layers invoke use cases but do not own business decisions.
+Use Ports and Adapters (Hexagonal Architecture). Domain rules and application use cases depend on contracts. Next.js and Prisma are outer adapters. Dependency direction points inward.
 
 ## Consequences
 
-- Domain and application modules remain framework-independent.
-- Persistence can be implemented or replaced without changing domain rules.
-- Use cases can be tested with in-memory fakes.
-- More explicit interfaces and composition wiring are required.
+- Domain policy can be tested without a database or web server.
+- Persistence can change without changing match rules.
+- The composition root makes dependencies explicit.
+- More interfaces and files are introduced than a minimal CRUD implementation; this is intentional for clear boundaries and testability.

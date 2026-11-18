@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 export type { CurrentUserPort } from "./current-user.port.js";
 export type { ProfileRepositoryPort } from "./profile-repository.port.js";
 export type { SwipeRepositoryPort } from "./swipe-repository.port.js";

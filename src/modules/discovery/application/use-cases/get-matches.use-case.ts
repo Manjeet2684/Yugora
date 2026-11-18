@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { CurrentUserPort } from "../ports/current-user.port.js";
 import type { MatchRepositoryPort } from "../ports/match-repository.port.js";
 import type { ProfileRepositoryPort } from "../ports/profile-repository.port.js";

@@ -1,8 +1,10 @@
 node_modules/
-.next/
-dist/
 .build/
+.next/
+out/
 coverage/
+playwright-report/
+test-results/
 .env
 .env.*
 !.env.example
@@ -10,3 +12,4 @@ coverage/
 *.db-journal
 .DS_Store
 Thumbs.db
+src/generated/prisma/

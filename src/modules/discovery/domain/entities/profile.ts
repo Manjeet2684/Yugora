@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { ProfileId, UserId } from "../values/identifiers.js";
 
 /**

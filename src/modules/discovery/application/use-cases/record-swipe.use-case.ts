@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { createMatch } from "../../domain/entities/match.js";
 import { createSwipeDecision, type SwipeDirection } from "../../domain/entities/swipe-decision.js";
 import { isMutualLike } from "../../domain/policies/mutual-match-policy.js";

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { PublicProfileDto, MatchDto } from "../../modules/discovery/application/dto/discovery-dto.js";
 import type { SwipeDirection } from "../../modules/discovery/domain/entities/swipe-decision.js";
 

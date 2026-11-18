@@ -1,0 +1,50 @@
+%% Copyright (c) 2026 Manjeet2684. All rights reserved.
+erDiagram
+  USER ||--o| PROFILE : owns
+  PROFILE ||--o{ PROFILE_INTEREST : has
+  INTEREST ||--o{ PROFILE_INTEREST : labels
+  USER ||--o{ SWIPE : "acts as actor"
+  USER ||--o{ SWIPE : "is target of"
+  USER ||--o{ MATCH : "is lower participant"
+  USER ||--o{ MATCH : "is higher participant"
+
+  USER {
+    string id PK
+    datetime createdAt
+  }
+  PROFILE {
+    string id PK
+    string ownerUserId FK,UK
+    string name
+    int age
+    string photoUrl
+    string bio
+    string locationLabel
+    boolean isActive
+    int displayOrder
+    datetime createdAt
+    datetime updatedAt
+  }
+  INTEREST {
+    string id PK
+    string name UK
+  }
+  PROFILE_INTEREST {
+    string profileId PK,FK
+    string interestId PK,FK
+    int position
+    datetime createdAt
+  }
+  SWIPE {
+    string id PK
+    string actorUserId FK
+    string targetUserId FK
+    string direction
+    datetime createdAt
+  }
+  MATCH {
+    string id PK
+    string userLowId FK
+    string userHighId FK
+    datetime matchedAt
+  }

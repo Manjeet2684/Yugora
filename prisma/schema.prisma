@@ -1,0 +1,89 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
+// YUGORA's original application data model. See COPYRIGHT.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id              String   @id
+  createdAt       DateTime @default(now())
+  profile         Profile?
+  swipesMade      Swipe[]  @relation("SwipeActor")
+  swipesReceived  Swipe[]  @relation("SwipeTarget")
+  matchesAsLow    Match[]  @relation("MatchLow")
+  matchesAsHigh   Match[]  @relation("MatchHigh")
+}
+
+model Profile {
+  id            String            @id
+  ownerUserId   String            @unique
+  name          String
+  age           Int
+  photoUrl      String
+  bio           String
+  locationLabel String
+  isActive      Boolean           @default(true)
+  displayOrder  Int               @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  owner         User              @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  interests     ProfileInterest[]
+
+  @@index([isActive, displayOrder])
+}
+
+model Interest {
+  id       String            @id @default(cuid())
+  name     String            @unique
+  profiles ProfileInterest[]
+}
+
+model ProfileInterest {
+  profileId  String
+  interestId String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, interestId])
+  @@index([interestId])
+}
+
+/// A single directed record represents one user's decision about another user.
+/// Incoming interest is a Swipe where the current user is targetUserId; it is
+/// never exposed as a separate feed attribute or table.
+model Swipe {
+  id          String   @id @default(cuid())
+  actorUserId String
+  targetUserId String
+  direction   String
+  createdAt   DateTime @default(now())
+  actor       User     @relation("SwipeActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  target      User     @relation("SwipeTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@unique([actorUserId, targetUserId])
+  @@index([targetUserId, direction])
+  @@index([actorUserId, createdAt])
+}
+
+/// Only mutual LIKE pairs are stored. userLowId is lexicographically smaller
+/// than userHighId, making the pair order-independent and unique.
+model Match {
+  id         String   @id @default(cuid())
+  userLowId  String
+  userHighId String
+  matchedAt  DateTime @default(now())
+  userLow    User     @relation("MatchLow", fields: [userLowId], references: [id], onDelete: Cascade)
+  userHigh   User     @relation("MatchHigh", fields: [userHighId], references: [id], onDelete: Cascade)
+
+  @@unique([userLowId, userHighId])
+  @@index([userLowId, matchedAt])
+  @@index([userHighId, matchedAt])
+}

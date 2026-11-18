@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { SwipeDecision } from "../entities/swipe-decision.js";
 
 /**

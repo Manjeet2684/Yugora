@@ -1,0 +1,27 @@
+<!-- Copyright (c) 2026 Manjeet2684. All rights reserved. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" role="img" aria-labelledby="t d">
+<title id="t">YUGORA entity relationship diagram</title><desc id="d">Six tables: User, Profile, Interest, ProfileInterest, Swipe, and Match. Swipe is a directed record with actor and target user foreign keys. Match has a canonical unique user pair. ProfileInterest resolves the many-to-many relationship.</desc>
+<defs><style>.card{fill:#fffaf4;stroke:#b9a995;stroke-width:2}.head{fill:#1d403c}.h{font:700 21px Arial;fill:#fff}.f{font:15px Arial;fill:#34443e}.muted{font:12px Arial;fill:#7a7469}.line{stroke:#b88964;stroke-width:2.5;fill:none}.rel{font:13px Arial;fill:#765c45;font-weight:700}</style><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6Z" fill="#b88964"/></marker></defs>
+<rect width="1280" height="800" rx="24" fill="#f6f2eb"/><text x="50" y="55" fill="#1b3936" font-family="Arial" font-size="28" font-weight="700">YUGORA · DATABASE ERD</text><text x="50" y="84" fill="#68756f" font-family="Arial" font-size="15">Six normalized tables · directed decisions · persisted mutual matches</text>
+<!-- User -->
+<rect class="card" x="50" y="140" width="250" height="175" rx="12"/><path class="head" d="M62 140 H288 Q300 140 300 152 V188 H50 V152 Q50 140 62 140Z"/><text class="h" x="75" y="172">User</text><text class="f" x="72" y="222">PK  id</text><text class="f" x="72" y="250">createdAt</text><text class="muted" x="72" y="285">Demo user + 30 profile owners</text>
+<!-- Profile -->
+<rect class="card" x="450" y="115" width="300" height="235" rx="12"/><path class="head" d="M462 115 H738 Q750 115 750 127 V163 H450 V127 Q450 115 462 115Z"/><text class="h" x="475" y="147">Profile</text><text class="f" x="472" y="197">PK  id</text><text class="f" x="472" y="225">FK  ownerUserId · UNIQUE</text><text class="f" x="472" y="253">name · age · photoUrl</text><text class="f" x="472" y="281">bio · locationLabel</text><text class="f" x="472" y="309">isActive · displayOrder</text><text class="muted" x="472" y="334">Age CHECK: 18 or older</text>
+<!-- Interest -->
+<rect class="card" x="930" y="130" width="250" height="145" rx="12"/><path class="head" d="M942 130 H1168 Q1180 130 1180 142 V178 H930 V142 Q930 130 942 130Z"/><text class="h" x="955" y="162">Interest</text><text class="f" x="952" y="212">PK  id</text><text class="f" x="952" y="240">name · UNIQUE</text>
+<!-- ProfileInterest -->
+<rect class="card" x="900" y="470" width="300" height="165" rx="12"/><path class="head" d="M912 470 H1188 Q1200 470 1200 482 V518 H900 V482 Q900 470 912 470Z"/><text class="h" x="925" y="502">ProfileInterest</text><text class="f" x="922" y="552">PK/FK  profileId</text><text class="f" x="922" y="580">PK/FK  interestId</text><text class="f" x="922" y="608">position · createdAt</text>
+<!-- Swipe -->
+<rect class="card" x="50" y="475" width="330" height="215" rx="12"/><path class="head" d="M62 475 H368 Q380 475 380 487 V523 H50 V487 Q50 475 62 475Z"/><text class="h" x="75" y="507">Swipe</text><text class="f" x="72" y="557">PK  id</text><text class="f" x="72" y="585">FK  actorUserId → User</text><text class="f" x="72" y="613">FK  targetUserId → User</text><text class="f" x="72" y="641">direction: LIKE | PASS</text><text class="f" x="72" y="669">createdAt</text>
+<!-- Match -->
+<rect class="card" x="480" y="500" width="320" height="190" rx="12"/><path class="head" d="M492 500 H788 Q800 500 800 512 V548 H480 V512 Q480 500 492 500Z"/><text class="h" x="505" y="532">Match</text><text class="f" x="502" y="582">PK  id</text><text class="f" x="502" y="610">FK  userLowId → User</text><text class="f" x="502" y="638">FK  userHighId → User</text><text class="f" x="502" y="666">matchedAt</text>
+<!-- Relationships. The two role-specific user FKs are stated together to keep paths readable. -->
+<path class="line" d="M300 225 H440" marker-end="url(#arr)"/><text class="rel" x="325" y="210">1 : 0..1</text>
+<path class="line" d="M175 315 V465" marker-end="url(#arr)"/><text class="rel" x="188" y="405">actor + target</text><text class="muted" x="188" y="425">two 1:N roles</text>
+<path class="line" d="M300 265 H390 V445 H640 V490" marker-end="url(#arr)"/><text class="rel" x="410" y="430">low + high participants</text>
+<path class="line" d="M750 235 H850 V552 H890" marker-end="url(#arr)"/><text class="rel" x="770" y="220">1:N via join</text>
+<path class="line" d="M1055 275 V460" marker-end="url(#arr)"/><text class="rel" x="1068" y="365">1:N</text>
+<text x="50" y="755" class="muted">Incoming interest is a directed Swipe targeting the viewer. There is no separate incoming-likes table or feed exposure.</text>
+<text x="480" y="725" class="muted">UNIQUE pair · userLowId &lt; userHighId</text>
+<text x="50" y="725" class="muted">UNIQUE(actorUserId, targetUserId)</text>
+</svg>

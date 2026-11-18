@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 export abstract class ApplicationError extends Error {
   protected constructor(
     message: string,

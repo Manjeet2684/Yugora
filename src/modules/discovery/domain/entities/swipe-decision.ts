@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { UserId, SwipeId } from "../values/identifiers.js";
 
 export const SWIPE_DIRECTIONS = ["LIKE", "PASS"] as const;

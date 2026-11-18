@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { Profile } from "../../domain/entities/profile.js";
 import type { Match } from "../../domain/entities/match.js";
 import type { UserId } from "../../domain/values/identifiers.js";

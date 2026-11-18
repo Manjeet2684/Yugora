@@ -1,32 +1,109 @@
-# API Contract Baseline
+# HTTP API Contract Baseline
 
-The API is designed around one server-configured demo user. The browser does not submit an actor user ID.
+The routes are implemented in Gate 3. This document fixes the intended contract before transport code is added.
 
-## GET /feed
+## GET `/feed`
 
-Returns active profiles that the current demo user has not already swiped on. A profile that has liked the demo user remains eligible until the demo user makes a decision.
+Returns active profiles that have not been swiped on by the server-configured demo user.
 
-The response contains public profile fields only. It must not contain incoming-like flags, incoming-like counts, swipe records, or hidden-interest metadata.
+```json
+{
+  "profiles": [
+    {
+      "id": "profile_001",
+      "name": "Riya",
+      "age": 23,
+      "photoUrl": "/profiles/riya.jpg",
+      "bio": "Coffee lover and weekend explorer.",
+      "locationLabel": "Delhi",
+      "interests": ["Travel", "Photography", "Music"]
+    }
+  ]
+}
+```
 
-## POST /swipe
+The response must not contain incoming-like flags, like counts, internal user IDs, swipe rows, or match eligibility hints.
 
-Request body: { "profileId": "profile-123", "direction": "LIKE" }
+## POST `/swipe`
 
-Allowed directions: LIKE and PASS.
+Request:
 
-The operation records the directed decision, checks for an existing reciprocal LIKE, and creates a match in the same transaction when both directions are LIKE. A retry of the same decision is idempotent. A conflicting second decision for the same directed pair returns a conflict.
+```json
+{
+  "profileId": "profile_001",
+  "direction": "LIKE"
+}
+```
 
-The response includes the recorded swipe, a matched boolean, and match details only if reciprocal LIKE exists.
+`direction` is exactly `LIKE` or `PASS`. The browser must not send an actor user ID.
 
-## GET /matches
+Successful non-match response:
 
-Returns persisted mutual matches for the server-configured demo user. A one-sided incoming LIKE is never a match and must never appear here.
+```json
+{
+  "success": true,
+  "matched": false,
+  "matchCreated": false,
+  "match": null
+}
+```
 
-## Error semantics
+Successful mutual-match response:
 
-- 400: malformed input or unsupported direction.
-- 404: target profile does not exist or is unavailable.
-- 409: an incompatible decision already exists for the same directed pair.
-- 500: unexpected failure; do not expose stack traces or database details.
+```json
+{
+  "success": true,
+  "matched": true,
+  "matchCreated": true,
+  "match": {
+    "id": "match_001",
+    "profile": {
+      "id": "profile_001",
+      "name": "Riya",
+      "age": 23,
+      "photoUrl": "/profiles/riya.jpg",
+      "bio": "Coffee lover and weekend explorer.",
+      "locationLabel": "Delhi",
+      "interests": ["Travel", "Photography", "Music"]
+    },
+    "matchedAt": "2026-11-18T12:00:00.000Z"
+  }
+}
+```
 
-Responses containing user-specific data should be private and non-cacheable.
+An identical retry returns the current result but sets `matchCreated` to false if the Match already existed. A different direction for an already-recorded pair returns a conflict.
+
+## GET `/matches`
+
+Returns persisted mutual matches for the configured demo user only.
+
+```json
+{
+  "matches": []
+}
+```
+
+## Error envelope
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PROFILE_NOT_FOUND",
+    "message": "This profile is unavailable.",
+    "retryable": false
+  }
+}
+```
+
+Expected status mapping:
+
+| Status | Meaning | Example |
+|---:|---|---|
+| 400 | Invalid request | Invalid direction or malformed body |
+| 404 | Target unavailable | Profile not found or inactive |
+| 409 | Decision conflict | Opposite swipe already exists |
+| 500 | Unexpected failure | Unhandled application error |
+| 503 | Temporary service failure | Database unavailable |
+
+Private/user-specific responses must not be shared-cached. Route handlers must serialize DTOs, not ORM entities.

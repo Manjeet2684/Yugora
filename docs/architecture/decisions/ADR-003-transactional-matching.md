@@ -1,18 +1,19 @@
-# ADR-003: Transactional Matching
+# ADR-003: Persist Swipe and Match Atomically
 
-**Status:** Accepted
+- **Status:** Accepted
+- **Decision:** Gate 1
 
 ## Context
 
-A match must exist only after both participants have recorded LIKE decisions. A partial write must not leave a swipe persisted while its corresponding match creation has failed.
+A match is a consequence of a newly persisted LIKE when a reciprocal LIKE already exists. If the outgoing Swipe is saved but Match creation fails, the application must not report a successful match or leave ambiguous partial state.
 
 ## Decision
 
-Record the outgoing swipe, inspect the reciprocal decision, and create a canonical Match within one Unit of Work / database transaction. Enforce uniqueness for swipe direction and canonical match pairs at the persistence layer. Same-direction retries are idempotent.
+`RecordSwipeUseCase` executes the outgoing Swipe write, reciprocal decision lookup, and optional Match creation inside one `UnitOfWorkPort` transaction. Repository ports expose atomic create-if-absent operations to handle uniqueness races and retries.
 
 ## Consequences
 
-- Matching remains a server-side decision.
-- Failed match persistence rolls back the new swipe.
-- Concurrent requests converge on one swipe and one match, subject to database uniqueness constraints.
-- The frontend displays a match celebration only after the API confirms matched=true.
+- A transaction failure rolls back the swipe and match changes together.
+- A retry of the same decision is safe.
+- An opposite decision for the same directed pair is a conflict.
+- The persistence adapter must enforce database uniqueness constraints and provide atomic upsert/read behavior.

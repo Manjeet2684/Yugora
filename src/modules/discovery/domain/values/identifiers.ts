@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Manjeet2684. All rights reserved.
 /** Branded identifiers prevent accidentally mixing profile IDs and user IDs. */
 export type UserId = string & { readonly __brand: "UserId" };
 export type ProfileId = string & { readonly __brand: "ProfileId" };

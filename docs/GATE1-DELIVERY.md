@@ -1,36 +1,45 @@
 # YUGORA — Gate 1 Delivery Report
 
-**Status: Complete and committed to the main branch.** Gate 1 establishes the framework-independent domain and application foundation, typed API contracts, composition root, architecture documentation, and automated architecture checks.
+**Status: Complete locally; published to the YUGORA GitHub repository.**
 
 ## Included
 
-- Strict TypeScript configuration and package scripts.
+- Strict TypeScript configuration.
 - Branded identifiers for user, profile, swipe, and match IDs.
 - Profile, directed Swipe, and canonical Match domain models.
 - Pure mutual-LIKE matching policy.
-- Application ports for current-user identity, profiles, swipes, matches, and Unit of Work.
-- GetFeedUseCase, RecordSwipeUseCase, and GetMatchesUseCase.
+- Application ports for server-side current-user identity, profiles, swipes, matches, and Unit of Work.
+- Use cases for feed retrieval, swipe recording, and match retrieval.
 - Explicit public DTO projection and API contract types.
 - Dependency-injected composition root.
-- Architecture overview, Ports and Adapters documentation, API contracts, requirement traceability, quality plan, and three ADRs.
+- Architecture overview, Ports and Adapters documentation, API contract baseline, requirement traceability, quality plan, and three ADRs.
 - GitHub Actions workflow for type-checking and architecture tests.
 
-## Verification
+## Verification performed
 
-GitHub Actions: Architecture checks — successful on the Gate 1 source commit.
+Command:
 
-- Strict TypeScript type-check: passed.
-- TypeScript architecture build: passed.
-- Node architecture tests: 14 passed, 0 failed.
-- Domain/application dependency scan: passed; no Next.js, React, Prisma, or SQLite imports found in the core.
+```bash
+npm run check
+```
 
-The tests use in-memory adapters. They do not verify a real database, Prisma transaction, HTTP route, browser UI, or animation.
+Result:
 
-## Deferred to later gates
+- TypeScript strict type-check: **passed**.
+- TypeScript architecture build: **passed**.
+- Node architecture tests: **14 passed, 0 failed**.
+- Domain/application dependency scan: **passed**; no Next.js, React, Prisma, or SQLite imports found in the core.
+- ZIP integrity validation: **passed**.
+
+The architecture tests use in-memory test adapters. They verify core use-case behavior and do not claim to validate a real SQLite database, Prisma transaction, HTTP route, browser UI, or animation. Those are explicitly deferred to Gates 2–5.
+
+## Deferred by design
 
 - Next.js pages and React components.
 - Motion-based swipe UI and match animations.
 - Prisma schema, SQLite migrations, and persistence adapters.
-- 30+ profile seed data and seeded incoming LIKE rows.
+- 30–40 profile seed data and seeded incoming LIKE rows.
 - HTTP Route Handlers and HTTP error mapping.
 - Playwright browser tests, responsive QA, and accessibility verification.
+
+These are not missing Gate 1 deliverables; they belong to the later gates in the agreed plan.
