@@ -3,7 +3,9 @@ name: YUGORA quality gates
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -11,8 +13,22 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yugora
+          POSTGRES_PASSWORD: yugora
+          POSTGRES_DB: yugora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U yugora -d yugora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
-      DATABASE_URL: file:./prisma/yugora-ci.db
+      DATABASE_URL: postgresql://yugora:yugora@localhost:5432/yugora?schema=public
       DEMO_USER_ID: demo-user
       NEXT_TELEMETRY_DISABLED: 1
     steps:
@@ -22,6 +38,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Resolve and lock PostgreSQL adapter dependency graph
+        run: npm install --package-lock-only --ignore-scripts --no-fund --no-audit
+      - name: Preserve generated lockfile for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: yugora-postgresql-package-lock
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Install locked dependencies and generate Prisma Client
         run: npm ci --no-fund
       - name: Audit the resolved dependency tree
