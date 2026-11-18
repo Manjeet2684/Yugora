@@ -14,7 +14,7 @@
     "build:architecture": "tsc",
     "test:architecture": "npm run build:architecture && node --test tests/architecture.test.mjs",
     "test:persistence": "npm run db:deploy && npm run db:seed && npm run db:seed && node --test tests/persistence.integration.test.mjs",
-    "check": "npm run db:validate && npm run typecheck && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next",
+    "check": "npm run db:validate && npm run typecheck && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
@@ -26,7 +26,8 @@
     "dev": "next dev",
     "build": "next build",
     "build:next": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs"
   },
   "devDependencies": {
     "@types/better-sqlite3": "9.6.0",

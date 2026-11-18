@@ -4,7 +4,9 @@ import "./globals.css";
 
 export const metadata = {
   title: "YUGORA — A connection, only when it's mutual.",
-  description: "A privacy-first social discovery platform built around mutual interest.",
+  description: "Discover new people. Express interest privately. Connect only when it is mutual.",
+  applicationName: "YUGORA",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

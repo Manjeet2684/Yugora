@@ -40,7 +40,7 @@ YUGORA is built around one rule: **a match is mutual or it is not a match.** One
 
 ### Assignment scope
 
-This is a standalone implementation of the Coy SDE Intern assignment. It has a blank **Home** tab and a functional **Discover** experience in the planned UI gate. The assignment asks for 30+ mock profiles, pre-seeded incoming likes, swipe decisions that survive reloads, mutual-only matches, and these backend operations:
+This is a standalone implementation of the Coy SDE Intern assignment. **Home is intentionally blank**; Discover is the functional swipe experience, and Matches lists confirmed mutual connections. The assignment asks for 30+ mock profiles, pre-seeded incoming likes, swipe decisions that survive reloads, mutual-only matches, and these backend operations:
 
 | Method | Route | Contract |
 |---|---|---|
@@ -57,10 +57,19 @@ This is a standalone implementation of the Coy SDE Intern assignment. It has a b
 | **1 · Architecture** | Domain entities, policies, use cases, ports, API contracts, ADRs, architecture tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **2 · Persistence** | Prisma 7, SQLite schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-SQLite HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **4 · Frontend** | Mobile-first Discover, drag gestures, Like/Pass controls, match moment, Matches view, empty/error states | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
+| **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **5 · Quality** | E2E, concurrency/privacy regression, responsive and accessibility verification, final demo docs | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 
-Gates 1, 2 and 3 are complete and committed. Domain/application logic, Prisma/SQLite persistence, and the three required HTTP operations are covered by automated tests. The frontend remains Gate 4.
+Gates 1–4 are complete and committed. The architecture, SQLite persistence, required HTTP operations, and user-facing Discover/Matches experience are covered by automated checks. Gate 5 remains focused on full browser E2E, accessibility and release QA.
+
+
+## Gate 4 — The YUGORA experience
+
+The app opens directly into **Discover**. The Home tab is deliberately blank to match the assignment brief. Discover presents one profile at a time with image fallback, profile details, interests, responsive LIKE/PASS controls, touch/pointer drag, and keyboard arrow shortcuts. The Matches tab lists only records returned by `GET /matches`.
+
+The client uses the same `POST /swipe` operation for drag gestures and desktop buttons. A card animates away only after the API confirms the decision; on request failure it stays visible and the user can retry. A match celebration is shown only after the server returns a confirmed Match DTO. Feed, swipe and matches failures each have explicit recovery states. The interface respects `prefers-reduced-motion` and exposes labelled controls and live status feedback.
+
+The UI does not determine match eligibility, infer incoming interest, or keep swipe decisions as its source of truth. A reload fetches the authoritative feed and matches from SQLite-backed APIs.
 
 ## System architecture
 
@@ -73,7 +82,7 @@ YUGORA follows **Hexagonal Architecture (Ports and Adapters)**. The domain owns 
 
   ```mermaid
   flowchart LR
-    UI[Inbound UI adapter<br/>Gate 4] --> HTTP[HTTP Route Handlers<br/>Gate 3]
+    UI[Discover & Matches UI<br/>Gate 4] --> HTTP[HTTP Route Handlers<br/>Gate 3]
     HTTP --> APP[Application Use Cases<br/>Gate 1]
     APP --> DOMAIN[Domain Entities & Policies<br/>Gate 1]
     APP --> PORTS[Outbound Repository Ports<br/>Gate 1]
@@ -170,7 +179,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 | Area | Choice | Responsibility |
 |---|---|---|
 | Web/API framework | Next.js 16.4.6 App Router | Node.js Route Handlers and service shell |
-| UI runtime | React 19.3.1 | Server-rendered service landing page; interactive Discover is Gate 4 |
+| UI runtime | React 19.3.1 | Discover, Matches and swipe interaction state |
 | Language | TypeScript, Node.js 22 | Strict types and runtime |
 | ORM | Prisma ORM 7.10.1 | Typed data access and migrations |
 | Database | SQLite | Durable local source of truth |
@@ -237,7 +246,8 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
 
   ```text
   Yugora/
-  ├── app/                         # Next.js service page and root-path API handlers
+  ├── app/                         # Next.js UI and root-path API handlers
+  │   ├── components/yugora-app.tsx # Responsive Discover and Matches experience
   │   ├── feed/route.ts            # GET /feed
   │   ├── swipe/route.ts           # POST /swipe
   │   ├── matches/route.ts         # GET /matches
@@ -255,6 +265,7 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
   │   │   └── infrastructure/
   │   │       └── persistence/prisma/  # Profile, Swipe, Match, Unit of Work adapters
   │   ├── modules/discovery/http/      # Transport validation and error mapping
+  │   ├── modules/discovery/ui/        # Pure swipe gesture resolution
   │   └── infrastructure/
   │       ├── database/                # Prisma client and demo-user adapter
   │       └── http/                    # Warm-process route application singleton
@@ -263,7 +274,8 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
   ├── tests/
   │   ├── architecture.test.mjs       # In-memory core tests
   │   ├── persistence.integration.test.mjs
-  │   └── http.integration.test.mjs   # Real-SQLite HTTP adapter tests
+  │   ├── http.integration.test.mjs   # Real-SQLite HTTP adapter tests
+  │   └── ui-logic.test.mjs           # Gesture thresholds and bounded tilt
   ├── docs/
   │   ├── assets/                     # README visuals, ERD and architecture
   │   ├── diagrams/                   # Editable Mermaid diagram source
@@ -287,6 +299,8 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
 - [Mutual-match integrity migration](prisma/migrations/20261118010000_enforce_mutual_match_integrity/migration.sql)
 - [Match invariant error](src/modules/discovery/application/errors/application-errors.ts)
 - [HTTP route adapter](src/modules/discovery/http/discovery-route-handlers.ts)
+- [YUGORA Discover and Matches UI](app/components/yugora-app.tsx)
+- [Swipe gesture rules](src/modules/discovery/ui/swipe-gesture.ts)
 - [GET /feed](app/feed/route.ts) · [POST /swipe](app/swipe/route.ts) · [GET /matches](app/matches/route.ts)
 - [ADR-004: mutual-match persistence invariant](docs/architecture/decisions/ADR-004-mutual-match-database-invariant.md)
 - [Deterministic seed](prisma/seed.ts)

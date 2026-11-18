@@ -32,7 +32,19 @@
 - Success and error responses are private/no-store and include `X-Content-Type-Options: nosniff`.
 - All required routes are exposed at the exact root paths `/feed`, `/swipe`, and `/matches`.
 
-## Gate 4/5 — Browser and release
+## Gate 4 — UI interaction logic
+
+- Right drag beyond threshold maps to LIKE; left drag maps to PASS.
+- Short, vertical-dominant and invalid gestures never submit a swipe.
+- Gesture tilt is bounded and has no persistence authority.
+- Desktop buttons and pointer gestures call the same swipe mutation.
+- Card exit and match celebration wait for server confirmation.
+- Request failures preserve the active card and allow retry.
+- Empty feed, matches-empty, loading and error states are distinct.
+- Keyboard left/right shortcuts provide an equivalent interaction path.
+- Reduced-motion preferences disable non-essential animation.
+
+## Gate 5 — Browser and release
 
 - Playwright journeys for pass, like, mutual match, reload, empty feed and request failure.
 - Mobile drag and desktop button paths use the same mutation.
