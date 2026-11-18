@@ -24,4 +24,4 @@ The CHECK constraints and PL/pgSQL trigger functions are authored in SQL migrati
 
 ## Seed data
 
-`prisma/seed.ts` creates 30 fictional profile owners with age, placeholder photo URL, short bio, city, and normalized interests. It creates eight incoming LIKE Swipe rows targeting the demo user. Seeding is idempotent: stable user/profile IDs and compound upserts prevent duplicate rows; only interest links for seeded profiles are rebuilt.
+`prisma/seed.ts` creates 30 fictional profile owners with age, locally generated SVG data-URL avatar, short bio, city, and normalized interests. It creates eight incoming LIKE Swipe rows targeting the demo user. Seeding is idempotent: stable user/profile IDs and compound upserts prevent duplicate rows; only interest links for seeded profiles are rebuilt.
