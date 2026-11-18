@@ -12,7 +12,7 @@ flowchart LR
   APP --> DOMAIN[Domain Policy / Entities]
   APP --> OUT[Outbound Ports]
   OUT -.implemented by.-> ADAPTER[Prisma Adapters]
-  ADAPTER --> DB[(SQLite)]
+  ADAPTER --> DB[(PostgreSQL)]
 ```
 
 ## Inbound use cases
@@ -54,11 +54,11 @@ Executes a callback with transaction-scoped profile, swipe, and match repositori
 
 ## Composition root
 
-`createDiscoveryApplication` receives all adapters and constructs the use cases. This is the only location in the core where the use cases are wired together. The future Next.js layer will construct the Prisma adapters and provide them to this root.
+`createDiscoveryApplication` receives all adapters and constructs the use cases. This is the only location in the core where the use cases are wired together. The Next.js server composition root constructs the PostgreSQL Prisma adapters and provides them to this root.
 
 ## HTTP adapter responsibilities
 
-Route handlers will:
+Route handlers:
 
 1. Parse JSON and validate untrusted request data.
 2. Invoke one application use case.
