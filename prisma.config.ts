@@ -11,6 +11,6 @@ export default defineConfig({
   datasource: {
     // CI and deployed environments must provide their own managed PostgreSQL URL.
     // This local fallback is only a harmless schema-validation default.
-    url: process.env.DATABASE_URL ?? "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public",
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public",
   },
 });
