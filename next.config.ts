@@ -27,7 +27,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["pg"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
