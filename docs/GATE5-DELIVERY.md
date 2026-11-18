@@ -1,42 +1,54 @@
 # YUGORA — Gate 5 Browser QA and Release Review
 
-**PostgreSQL CI:** Passed in [GitHub Actions run 44372085961](https://github.com/Manjeet2684/Yugora/actions/runs/44372085961), commit `58ca3787ee05865da6bc78f78fc2ef7030bc7feb`. The run used committed `package-lock.json` with `npm ci` and PostgreSQL 16. It passed 57 tests: 14 architecture, 11 persistence, 9 HTTP, 5 UI gesture, 2 copyright, and 16 Chromium browser tests, plus dependency audit and production build.
+## Latest complete verification
 
-## Browser test approach
+The PostgreSQL hardening branch passed [GitHub Actions run 44393338816](https://github.com/Manjeet2684/Yugora/actions/runs/44393338816) on commit `0ca19a4fc1e801a626b26067e31878c260bfdf3d`.
 
-Playwright Test 1.65.1 drives Chromium against the built Next.js production server. Most UI journeys use page-level API interception for deterministic response/failure coverage. One unmocked browser journey uses the same pre-seeded PostgreSQL database as the deployed Next.js process, exercises the actual GET /feed → POST /swipe → GET /matches flow, reloads the page, and verifies that the profile is excluded and the mutual match persists. This complements the independent real-PostgreSQL HTTP and persistence suites.
+| Suite | Tests passed |
+|---|---:|
+| Migration URL and local avatar configuration | 7 |
+| Architecture | 14 |
+| PostgreSQL persistence | 11 |
+| HTTP integration | 9 |
+| UI gesture logic | 5 |
+| Copyright checks | 2 |
+| Chromium browser journeys | 16 |
+| **Total** | **64** |
 
-## Browser scenarios
+The run also passed PostgreSQL 16 migrations and repeatable seeding, Prisma schema validation, TypeScript checks, Next.js production build and `npm audit --audit-level=high` (0 vulnerabilities reported).
 
-- An unmocked full-stack browser journey creates a mutual match for the seeded Riya profile, reloads, verifies it disappears from the feed, and retrieves the persisted match.
-- Discover renders one profile card with labelled Like and Pass controls.
-- Home remains blank; navigation switches back to Discover.
-- Pass and one-sided Like submit their correct profile/direction payloads.
-- Mutual Like opens the dialog only when the server returns a Match DTO; the Matches page renders that match.
-- Match dialog receives focus, traps keyboard focus, closes with Escape, and restores prior focus when it remains available.
-- Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated device submit the same swipe shape as action buttons.
-- Deterministic fixture-backed reload behaviour is covered separately from the unmocked PostgreSQL-backed persistence journey.
-- Empty feed, broken image, feed error, swipe error and Matches error have independent retry/fallback tests.
-- Mobile navigation is visible, the desktop sidebar is hidden, the card remains in viewport and the page has no horizontal overflow at 390px.
-- Reduced-motion preference is respected and visible buttons have accessible names.
-- Production responses include baseline security headers and no permissive Access-Control-Allow-Origin header.
+## Browser and API scenarios
 
-## Concurrency and privacy regression
+Playwright Test drives Chromium against the built Next.js production server. Most UI journeys intercept same-origin APIs for deterministic behavior and failure coverage. The unmocked full-stack journey uses the pre-seeded PostgreSQL database and exercises the real `GET /feed → POST /swipe → GET /matches` flow, reloads the app, verifies the swiped profile is absent, and confirms the mutual match persists.
 
-The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses resolve to the same canonical Match ID, while PostgreSQL contains one directed Swipe row and one canonical Match row for that pair. A separate persistence test concurrently submits opposite-direction LIKE decisions and verifies the transaction-scoped advisory lock creates exactly one mutual Match. Both concurrency tests passed in the PostgreSQL 16 CI run. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
+Coverage includes:
+- Discover displays one profile at a time; Home remains deliberately blank.
+- Pass, one-sided Like, mutual Like and Matches view.
+- A match celebration opens only when the server returns a confirmed Match DTO.
+- Keyboard arrow actions and native Chromium touchscreen pointer events.
+- Feed exclusion after a decision and after reload.
+- Empty feed, broken-image fallback, and independent feed/swipe/matches error recovery.
+- Mobile navigation, a 390px responsive viewport without horizontal overflow, reduced-motion behavior, accessible button names, and modal focus/Escape behavior.
+- API privacy checks for one-sided incoming LIKES and explicit DTO fields.
+- Duplicate requests and concurrent reciprocal LIKEs converge on one canonical Match.
 
-## Security boundary review
+## Additional integration hardening
 
-The Next.js app now adds Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy and DNS-prefetch controls. CSP still permits inline Next.js runtime scripts/styles and the current fictional profile image host; it is a baseline, not a strict nonce-based policy. HSTS is intentionally omitted until HTTPS hosting is configured.
+- Runtime uses pooled `DATABASE_URL`; Prisma CLI prioritizes Neon direct `DATABASE_URL_UNPOOLED`, keeping `DIRECT_URL` as a compatibility fallback.
+- Vercel build command runs `prisma migrate deploy`, the idempotent demo seed, then `next build`.
+- Vercel Function region is configured to `sin1`, aligned with the selected Neon Singapore region.
+- Seeded fictional profiles use self-contained SVG data URLs. Browser requests no longer contact the former third-party avatar host.
+- CI includes migration URL precedence and avatar escaping/data-URL regression tests.
+- Vercel Firewall has a valid active rate-limit rule for `POST /swipe`: 20 requests per source IP per 60 seconds.
 
-The browser client uses relative same-origin API paths and the application does not grant cross-origin access with CORS headers. The API enforces JSON request content-type and strict input validation. This is appropriate for the assignment's single-demo-user setup, not a per-person access model.
+## Hosted verification still outstanding
 
-## Not a production launch approval
+The Vercel project is linked to this GitHub repository and has SSO protection enabled, but the Vercel API currently reports no deployments, domains or project environment variables. The supplied screenshot is still on Neon’s Connect Project wizard. Therefore we have not yet verified:
+- Neon pooled/direct variables are created under the exact unprefixed names;
+- Preview gets an isolated Neon branch while Production uses the default branch;
+- migrations and seed execute against the managed database;
+- persistence survives separate Vercel Function invocations;
+- the Firewall rule produces an HTTP 429 at the configured threshold;
+- HTTPS/HSTS, Preview access and final deployed response headers.
 
-- The environment's `DEMO_USER_ID` is shared by the demo; individual authentication and authorization are not implemented because the assignment explicitly excludes external authentication.
-- Persistent distributed rate limiting, abuse prevention and operational monitoring are not implemented.
-- Hosting provider, domain, HTTPS, production environment variables/secrets and deployment rollback policy are not configured.
-- A stricter nonce/hash CSP should be introduced when deployment-specific Next.js configuration is selected.
-- Manual screen-reader testing and real iOS/Android touch-device QA remain outstanding.
-
-A green Playwright and CI run validates the committed demo implementation. It does not imply that a public production instance exists or is ready for real users.
+Manual physical-device iOS/Android and screen-reader tests also remain outstanding. This document is not a production security sign-off.
