@@ -321,3 +321,10 @@ test('POST /swipe rejects invalid Content-Length declarations and non-UTF-8 JSON
   assert.equal(invalidEncodingResponse.status, 400);
   assert.equal((await invalidEncodingResponse.json()).error.code, 'INVALID_BODY_ENCODING');
 });
+
+
+test('POST /swipe rejects JSON-escaped unpaired UTF-16 surrogates in profile IDs', async () => {
+  const response = await handlers.postSwipe(post('{"profileId":"\\uD800","direction":"LIKE"}'));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error.code, 'INVALID_REQUEST');
+});
