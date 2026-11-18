@@ -28,3 +28,11 @@ test("avatar text is XML-escaped and empty names fall back safely", () => {
   const empty = decodeURIComponent(createPlaceholderProfilePhotoUrl("   ", Number.NaN).split(",", 2)[1] ?? "");
   assert.ok(empty.includes(">YU</text>"));
 });
+
+
+test("avatar generation preserves supplementary Unicode initials without URI encoding errors", () => {
+  const svg = decodeURIComponent(
+    createPlaceholderProfilePhotoUrl("😀 Riya", 4).split(",", 2)[1] ?? "",
+  );
+  assert.ok(svg.includes(">😀R</text>"));
+});
