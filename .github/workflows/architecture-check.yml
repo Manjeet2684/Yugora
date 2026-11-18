@@ -48,6 +48,8 @@ jobs:
         run: npm audit --audit-level=high
       - name: Validate schema, type-check, migrate, seed twice and test
         run: npm run check
+      - name: Verify the exact Vercel migration, seed and build command
+        run: npm run vercel-build
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Run production-browser E2E suite
