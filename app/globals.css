@@ -1,0 +1,97 @@
+:root {
+  color-scheme: dark;
+  --ink: #f7f1e9;
+  --muted: #b9adbf;
+  --accent: #d8a8bd;
+  --line: rgba(245, 229, 240, 0.13);
+  --panel: rgba(31, 22, 38, 0.66);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: #17121e;
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.service-shell {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  place-items: center;
+  padding: 64px 24px 36px;
+  background:
+    radial-gradient(ellipse at 16% 10%, rgba(109, 66, 105, 0.42), transparent 48%),
+    radial-gradient(ellipse at 88% 88%, rgba(142, 91, 111, 0.24), transparent 42%),
+    linear-gradient(135deg, #17121e 0%, #24192a 48%, #18131f 100%);
+}
+
+.service-content { position: relative; z-index: 1; width: min(100%, 720px); }
+.brand-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #c8b7c8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+.brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(231, 190, 211, .45);
+  border-radius: 50%;
+  color: #f3d7e4;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+h1 {
+  margin: 32px 0 4px;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(68px, 13vw, 116px);
+  font-weight: 500;
+  letter-spacing: 0.075em;
+  line-height: .98;
+}
+h1 span { color: var(--accent); }
+.brand-tagline { margin: 14px 0 0; color: #e1c7d7; font-family: Georgia, serif; font-size: clamp(20px, 4vw, 27px); }
+.service-copy { max-width: 570px; margin: 20px 0 34px; color: var(--muted); font-size: 15px; line-height: 1.8; }
+.endpoint-panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .22);
+  backdrop-filter: blur(18px);
+}
+.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 19px 22px; border-bottom: 1px solid var(--line); color: #c9b7c9; font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+.status-pill { display: inline-flex; align-items: center; gap: 8px; color: #c0d8c7; font-size: 9px; letter-spacing: .12em; white-space: nowrap; }
+.status-pill span { width: 7px; height: 7px; border-radius: 50%; background: #82c99b; box-shadow: 0 0 12px rgba(130,201,155,.65); }
+.endpoint-row { display: flex; align-items: center; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.endpoint-row:last-child { border-bottom: 0; }
+.method { min-width: 54px; padding: 6px 7px; border-radius: 6px; text-align: center; font: 800 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .07em; }
+.method-get { background: rgba(119, 174, 200, .15); color: #a9d5e8; }
+.method-post { background: rgba(219, 170, 197, .16); color: #f1bfd6; }
+.endpoint-info { display: grid; gap: 5px; }
+.endpoint-info code { color: #f4e4ee; font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.endpoint-info span { color: #ae9fb1; font-size: 12px; line-height: 1.5; }
+.service-footnote { margin: 20px 0 0; color: #97889d; font-size: 11px; line-height: 1.7; }
+.service-orb { position: absolute; width: 420px; height: 420px; border: 1px solid rgba(224, 174, 205, .08); border-radius: 50%; pointer-events: none; }
+.service-orb-one { top: -250px; right: -130px; }
+.service-orb-two { bottom: -300px; left: -150px; width: 560px; height: 560px; }
+.service-footer { position: absolute; bottom: 25px; color: #827587; font-size: 9px; font-weight: 700; letter-spacing: .17em; }
+.service-footer span { padding: 0 6px; color: #d1a5bc; }
+
+@media (max-width: 520px) {
+  .service-shell { padding: 44px 18px 64px; }
+  .panel-heading { align-items: flex-start; flex-direction: column; gap: 10px; padding: 16px; }
+  .endpoint-row { align-items: flex-start; gap: 11px; padding: 16px; }
+  .endpoint-info span { font-size: 11px; }
+  .service-footer { bottom: 18px; font-size: 8px; }
+}

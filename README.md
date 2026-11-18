@@ -169,6 +169,8 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 | Area | Choice | Responsibility |
 |---|---|---|
+| Web/API framework | Next.js 16.4.6 App Router | Node.js Route Handlers and service shell |
+| UI runtime | React 19.3.1 | Server-rendered service landing page; interactive Discover is Gate 4 |
 | Language | TypeScript, Node.js 22 | Strict types and runtime |
 | ORM | Prisma ORM 7.10.1 | Typed data access and migrations |
 | Database | SQLite | Durable local source of truth |
@@ -217,7 +219,7 @@ The seed command is designed to be repeatable. It creates 30 fictional profiles 
 
 ## API behaviour and privacy contract
 
-The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite; the Next.js web runtime and visual shell are introduced in Gate 4. The persistence layer must support the following behaviour:
+The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite. The Next.js service is runnable; the interactive Discover experience and Matches UI remain Gate 4. The persistence layer must support the following behaviour:
 
 - `GET /feed` excludes all profiles previously swiped on by the demo user, whether the decision was LIKE or PASS.
 - A profile's incoming LIKE does not remove it from the demo user's feed and is not serialized in the profile DTO.
@@ -232,10 +234,13 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
 
   ```text
   Yugora/
-  ├── app/                         # Root-path Next.js API Route Handlers
+  ├── app/                         # Next.js service page and root-path API handlers
   │   ├── feed/route.ts            # GET /feed
   │   ├── swipe/route.ts           # POST /swipe
-  │   └── matches/route.ts         # GET /matches
+  │   ├── matches/route.ts         # GET /matches
+  │   ├── layout.tsx               # Root document and metadata
+  │   ├── page.tsx                 # Minimal service landing page
+  │   └── globals.css              # Service shell styles
   ├── prisma/
   │   ├── migrations/                 # Versioned SQLite DDL
   │   ├── schema.prisma               # Six normalized models
@@ -251,6 +256,7 @@ The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/
   │       ├── database/                # Prisma client and demo-user adapter
   │       └── http/                    # Warm-process route application singleton
   │   └── shared/contracts/            # Transport-neutral API contracts
+  ├── next.config.ts               # Node.js native SQLite adapter externalization
   ├── tests/
   │   ├── architecture.test.mjs       # In-memory core tests
   │   ├── persistence.integration.test.mjs
