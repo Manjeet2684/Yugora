@@ -27,3 +27,7 @@ jobs:
         run: npm audit --audit-level=high
       - name: Validate schema, type-check, migrate, seed twice and test
         run: npm run check
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Run production-browser E2E suite
+        run: npm run test:e2e

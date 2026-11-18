@@ -58,9 +58,9 @@ This is a standalone implementation of the Coy SDE Intern assignment. **Home is 
 | **2 · Persistence** | Prisma 7, SQLite schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-SQLite HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **5 · Quality** | E2E, concurrency/privacy regression, responsive and accessibility verification, final demo docs | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
+| **5 · Quality** | Chromium browser journeys, keyboard/modal focus testing, responsive checks, failure recovery, baseline security headers and release-readiness review | <img alt="QA passed; release gated" src="https://img.shields.io/badge/QA%20passed-release%20gated-d69a32" /> |
 
-Gates 1–4 are complete and committed. The architecture, SQLite persistence, required HTTP operations, and user-facing Discover/Matches experience are covered by automated checks. Gate 5 remains focused on full browser E2E, accessibility and release QA.
+Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures, alongside the real-SQLite architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
 
 
 ## Gate 4 — The YUGORA experience
@@ -70,6 +70,15 @@ The app opens directly into **Discover**. The Home tab is deliberately blank to 
 The client uses the same `POST /swipe` operation for drag gestures and desktop buttons. A card animates away only after the API confirms the decision; on request failure it stays visible and the user can retry. A match celebration is shown only after the server returns a confirmed Match DTO. Feed, swipe and matches failures each have explicit recovery states. The interface respects `prefers-reduced-motion` and exposes labelled controls and live status feedback.
 
 The UI does not determine match eligibility, infer incoming interest, or keep swipe decisions as its source of truth. A reload fetches the authoritative feed and matches from SQLite-backed APIs.
+
+
+## Gate 5 — Browser QA and release boundary
+
+The Playwright suite launches the built Next.js production server and drives real Chromium pages. For deterministic user journeys it intercepts the browser's same-origin API calls; real database and HTTP correctness remain covered separately by the SQLite-backed integration suites. Browser coverage includes Pass, one-sided Like, server-confirmed mutual Match, reload/feed exclusion, empty feed, independent feed/swipe/matches failure recovery, broken-image fallback, keyboard shortcuts, pointer drag at a mobile viewport, dialog focus trapping and Escape dismissal, reduced motion, accessible button names, responsive overflow, and security headers.
+
+The application now emits a baseline Content Security Policy and browser security headers. The policy allows the current Next.js inline runtime and the seeded profile image host, so it is a baseline rather than a strict nonce-based CSP. No HSTS header is sent before an HTTPS deployment exists. The API does not advertise CORS access to other origins; relative same-origin requests and JSON content-type validation are used by the client.
+
+**Release blockers remain explicit:** `DEMO_USER_ID` represents a shared assignment demo account, not individual authentication; durable production rate limiting and abuse controls are not implemented; no hosting platform, domain, HTTPS certificate, secrets or monitoring target has been configured. Do not treat a successful CI/browser pass as a public-production deployment approval.
 
 ## System architecture
 

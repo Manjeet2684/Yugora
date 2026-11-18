@@ -46,6 +46,25 @@
 
 ## Gate 5 — Browser and release
 
+### Browser QA implemented
+- [x] Chromium runs against the built Next.js production server in CI.
+- [x] Pass, one-sided Like, mutual-match celebration and Matches rendering journeys.
+- [x] Swipe decision remains absent from the feed after reload (deterministic server fixture); SQLite/HTTP tests verify persisted decisions.
+- [x] Empty feed, feed failure/retry, swipe failure/retry and matches failure/retry.
+- [x] Desktop action buttons, mobile-width pointer drag and keyboard arrows call the same swipe operation.
+- [x] Broken profile image falls back to initials.
+- [x] Match dialog receives focus, traps Tab/Shift+Tab, closes on Escape and restores focus when possible.
+- [x] Reduced-motion preference and accessible button names.
+- [x] Mobile viewport navigation, card visibility and horizontal-overflow check.
+- [x] Baseline response security headers and absence of permissive CORS response headers.
+
+### Public release blockers (not signed off)
+- [ ] Replace the shared assignment demo identity with real per-user authentication/authorization.
+- [ ] Add durable platform-appropriate API rate limiting and abuse controls.
+- [ ] Select and configure hosting, HTTPS, production secrets, monitoring and alerting.
+- [ ] Revisit CSP with a nonce/hash strategy and deployment-specific policy before tightening inline script allowances.
+- [ ] Perform manual assistive-technology and real-device touch testing before launch.
+
 - Playwright journeys for pass, like, mutual match, reload, empty feed and request failure.
 - Mobile drag and desktop button paths use the same mutation.
 - Reduced-motion and keyboard controls remain functional.

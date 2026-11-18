@@ -23,3 +23,17 @@
 | POST `/swipe` | `app/swipe/route.ts` | 3 | Complete |
 | GET `/matches` | `app/matches/route.ts` | 3 | Complete |
 | Persistence across reloads | SQLite-backed Swipe and Match records | 2–3 | Complete |
+
+
+## Gate 5 — Browser and release QA
+
+| Requirement | Verification | Status |
+|---|---|---|
+| Pass, Like, mutual match and Matches browser journeys | Playwright production-server Chromium suite | Complete |
+| Swiped profile remains out of feed after reload | Playwright stateful API fixture plus SQLite/HTTP persistence suites | Complete |
+| Feed, swipe and matches failure recovery | Independent Playwright route-failure cases | Complete |
+| Mobile pointer drag and desktop/keyboard actions | Browser viewport/gesture and keyboard tests | Complete |
+| Reduced motion, dialog focus loop, Escape, accessible button names | Playwright accessibility-oriented checks | Complete |
+| Empty feed and broken-image fallback | Playwright | Complete |
+| Baseline browser security headers and no permissive CORS response | Production-server header assertions | Complete |
+| Production identity, rate limiting, deployment and monitoring | Release configuration / operational work | Blocked; not part of assignment demo |

@@ -27,9 +27,11 @@
     "build": "next build",
     "build:next": "next build",
     "start": "next start",
-    "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs"
+    "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
+    "test:e2e": "playwright test --config=playwright.config.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@types/better-sqlite3": "9.6.0",
     "@types/node": "22.19.3",
     "prisma": "7.10.1",

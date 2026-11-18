@@ -207,10 +207,47 @@ function ProfileCard({
 }
 
 function MatchCelebration({ match, onClose, onViewMatches }: { match: MatchDto; onClose: () => void; onViewMatches: () => void }) {
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    closeButtonRef.current?.focus();
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, [onClose]);
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
-        <button className="modal-close" aria-label="Close match celebration" onClick={onClose}><Icon name="close" size={19}/></button>
+      <section ref={dialogRef} className="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
+        <button ref={closeButtonRef} className="modal-close" aria-label="Close match celebration" onClick={onClose}><Icon name="close" size={19}/></button>
         <div className="match-confetti" aria-hidden="true"><span/><span/><span/><span/><span/></div>
         <span className="eyebrow">WELL, THIS IS SOMETHING</span>
         <div className="match-photo-wrap"><ProfileImage profile={match.profile} className="match-photo"/><span className="match-heart"><Icon name="heart" size={21}/></span></div>
@@ -263,6 +300,7 @@ export default function YugoraApp() {
   const [drag, setDrag] = useState<DragPosition>({ x: 0, y: 0 });
   const [exitDirection, setExitDirection] = useState<SwipeDirection | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
   const [celebration, setCelebration] = useState<MatchDto | null>(null);
   const dragOrigin = useRef<{ x: number; y: number; pointerId: number } | null>(null);
 
@@ -299,7 +337,7 @@ export default function YugoraApp() {
   const submitSwipe = useCallback(async (direction: SwipeDirection) => {
     const profile = profiles[0];
     if (!profile || busy) return;
-    setBusy(true); setNotice(null);
+    setBusy(true); setNotice(null); setStatusMessage("Saving your decision.");
     try {
       const result = await apiRequest<SwipeResponse>("/swipe", {
         method: "POST",
@@ -312,12 +350,13 @@ export default function YugoraApp() {
       setProfiles((current) => current.filter((item) => item.id !== profile.id));
       setDrag({ x: 0, y: 0 });
       setExitDirection(null);
+      setStatusMessage(result.matched ? `You and ${profile.name} matched.` : `${profile.name} ${direction === "LIKE" ? "liked" : "passed"}.`);
       if (result.matched && result.match) {
         setCelebration(result.match);
         setMatches((current) => current.some((item) => item.id === result.match?.id) ? current : [result.match!, ...current]);
       }
     } catch (error) {
-      setDrag({ x: 0, y: 0 }); setExitDirection(null);
+      setDrag({ x: 0, y: 0 }); setExitDirection(null); setStatusMessage("");
       setNotice(error instanceof Error ? error.message : "Your decision could not be saved. Please try again.");
     } finally {
       setBusy(false);
@@ -404,7 +443,7 @@ export default function YugoraApp() {
         {screen !== "home" && <footer className="content-footer"><span>YUGORA <i>·</i> TWO SIDES. ONE GENUINE CONNECTION.</span><span>MADE FOR MUTUALITY <b>♡</b></span></footer>}
       </div>
       {celebration && <MatchCelebration match={celebration} onClose={() => setCelebration(null)} onViewMatches={() => { setCelebration(null); setScreen("matches"); }}/>} 
-      <div className="screen-reader-status" aria-live="polite" aria-atomic="true">{busy ? "Saving your swipe" : notice ?? ""}</div>
+      <div className="screen-reader-status" aria-live="polite" aria-atomic="true">{busy ? "Saving your swipe" : statusMessage || notice || ""}</div>
       <span className="sr-only">Current view: {activeScreenTitle}</span>
     </main>
   );
