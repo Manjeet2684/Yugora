@@ -265,7 +265,61 @@ test('Match repository refuses to create a match without two persisted LIKE deci
   );
 });
 
-test('SQLite trigger blocks direct invalid Match inserts and deletes stale matches when a LIKE is removed', async () => {
+test('simultaneous reciprocal LIKE requests serialize and create one mutual match', async () => {
+  const firstUserId = asUserId(unique('reciprocal-first'));
+  const secondUserId = asUserId(unique('reciprocal-second'));
+  const firstProfileId = asProfileId(unique('reciprocal-profile'));
+  const secondProfileId = asProfileId(unique('reciprocal-profile'));
+
+  await ensureProfile({
+    userId: firstUserId,
+    profileId: firstProfileId,
+    name: 'Reciprocal First Fixture',
+  });
+  await ensureProfile({
+    userId: secondUserId,
+    profileId: secondProfileId,
+    name: 'Reciprocal Second Fixture',
+  });
+
+  const firstUseCase = new RecordSwipeUseCase(
+    { getCurrentUserId: async () => firstUserId },
+    new PrismaUnitOfWork(prisma),
+    () => unique('reciprocal-first-swipe'),
+  );
+  const secondUseCase = new RecordSwipeUseCase(
+    { getCurrentUserId: async () => secondUserId },
+    new PrismaUnitOfWork(prisma),
+    () => unique('reciprocal-second-swipe'),
+  );
+
+  const [firstResult, secondResult] = await Promise.all([
+    firstUseCase.execute({ profileId: secondProfileId, direction: 'LIKE' }),
+    secondUseCase.execute({ profileId: firstProfileId, direction: 'LIKE' }),
+  ]);
+
+  const [userLowId, userHighId] = [firstUserId, secondUserId].sort();
+  const [swipeCount, matchCount, match] = await Promise.all([
+    prisma.swipe.count({
+      where: {
+        OR: [
+          { actorUserId: firstUserId, targetUserId: secondUserId },
+          { actorUserId: secondUserId, targetUserId: firstUserId },
+        ],
+      },
+    }),
+    prisma.match.count({ where: { userLowId, userHighId } }),
+    prisma.match.findUnique({ where: { userLowId_userHighId: { userLowId, userHighId } } }),
+  ]);
+
+  assert.equal(swipeCount, 2, 'both directed LIKE decisions must persist exactly once');
+  assert.equal(matchCount, 1, 'the canonical pair must have exactly one Match row');
+  assert.ok(match, 'the reciprocal likes must result in a persisted Match');
+  assert.equal([firstResult, secondResult].filter((result) => result.matched).length, 1,
+    'the first transaction returns before mutuality; the serialized second transaction creates the match');
+});
+
+test('PostgreSQL trigger blocks direct invalid Match inserts and deletes stale matches when a LIKE is removed', async () => {
   const firstUserId = asUserId(unique('trigger-a'));
   const secondUserId = asUserId(unique('trigger-b'));
   const thirdUserId = asUserId(unique('trigger-c'));
