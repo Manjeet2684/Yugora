@@ -1,5 +1,7 @@
 # YUGORA — Gate 4 Frontend Delivery
 
+> **Persistence note:** The original Gate 4 milestone ran against the SQLite baseline. The current PostgreSQL hardening branch retains the same UI/API behavior and verifies it against PostgreSQL; see `docs/GATE5-DELIVERY.md`.
+
 **Status: Implemented; CI verification is running on the Gate 4 commit.**
 
 ## Experience delivered
