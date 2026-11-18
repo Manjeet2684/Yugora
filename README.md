@@ -60,7 +60,7 @@ This is a standalone implementation of the Coy SDE Intern assignment. **Home is 
 | **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **5 · Quality** | Chromium browser journeys, keyboard/modal focus testing, responsive checks, failure recovery, baseline security headers and release-readiness review | <img alt="QA passed; release gated" src="https://img.shields.io/badge/QA%20passed-release%20gated-d69a32" /> |
 
-Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures plus an unmocked PostgreSQL-backed full-stack match/reload journey, alongside the real-PostgreSQL architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
+Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys exercise the production Next.js server with deterministic API fixtures plus an unmocked PostgreSQL-backed match/reload journey. **Public release is still gated**: the assignment intentionally uses one shared demo identity; Neon is not connected, no Preview deployment or domain exists, and HTTPS/monitoring are not yet verified. Vercel SSO protection and an IP-based edge rate limit for all three API routes are configured.
 
 
 ## Gate 4 — The YUGORA experience
@@ -76,9 +76,9 @@ The UI does not determine match eligibility, infer incoming interest, or keep sw
 
 The Playwright suite launches the built Next.js production server and drives real Chromium pages. For deterministic user journeys it intercepts the browser's same-origin API calls; real database and HTTP correctness remain covered separately by the PostgreSQL-backed integration suites. Browser coverage includes Pass, one-sided Like, server-confirmed mutual Match, reload/feed exclusion, empty feed, independent feed/swipe/matches failure recovery, broken-image fallback, keyboard shortcuts, native touchscreen drag in mobile emulation, dialog focus trapping and Escape dismissal, reduced motion, accessible button names, responsive overflow, and security headers.
 
-The application now emits a baseline Content Security Policy and browser security headers. The policy allows the current Next.js inline runtime and the seeded profile image host, so it is a baseline rather than a strict nonce-based CSP. No HSTS header is sent before an HTTPS deployment exists. The API does not advertise CORS access to other origins; relative same-origin requests and JSON content-type validation are used by the client.
+The application now emits a baseline Content Security Policy and browser security headers. The policy allows the current Next.js inline runtime, so it is a baseline rather than a strict nonce-based CSP. Seeded profile avatars are self-contained SVG data URLs; no third-party photo host is called. No HSTS header is sent before an HTTPS deployment exists. The API does not advertise CORS access to other origins; relative same-origin requests and JSON content-type validation are used by the client.
 
-**Release blockers remain explicit:** `DEMO_USER_ID` represents a shared assignment demo account, not individual authentication; durable production rate limiting and abuse controls are not implemented; no hosting platform, domain, HTTPS certificate, secrets or monitoring target has been configured. Do not treat a successful CI/browser pass as a public-production deployment approval.
+**Release blockers remain explicit:** `DEMO_USER_ID` represents a shared assignment demo account, not individual authentication; the Neon database is not connected; no protected Vercel Preview or domain exists; and HTTPS/monitoring plus actual edge HTTP 429 behavior cannot be verified until deployment. Vercel SSO protection is enabled and an IP-based 20-requests-per-minute rule is active for `GET /feed`, `POST /swipe` and `GET /matches`. Do not treat a successful CI/browser pass as a public-production deployment approval.
 
 
 ## Part A — Product recommendations
@@ -191,7 +191,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 ## Security review and Vercel readiness
 
-The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel readiness assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The PostgreSQL hardening branch has passed CI against PostgreSQL 16, including the database concurrency regression, but a managed database, Vercel Preview, and durable edge rate limits are still unprovisioned. Keep the shared demo behind deployment protection; do not expose the shared demo identity publicly.
+The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel readiness assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). PostgreSQL 16 CI and the Vercel API/build configuration are verified, but Neon is not connected and no Vercel Preview exists yet. Vercel SSO and an API edge rate limit are configured; keep the shared demo protected and do not expose the shared identity publicly.
 
 ## Technology choices
 
@@ -208,7 +208,7 @@ The scoped senior engineering/security review, attack-case matrix, release block
 
 ## Getting started
 
-**Requirements:** Node.js 22.12+, npm, and a PostgreSQL 16+ database. Set `DATABASE_URL` to the application's pooled PostgreSQL connection string when the provider supplies one, and `DIRECT_URL` to a direct connection for migrations. In local development, both can point at the same PostgreSQL database. The current-user adapter still follows the assignment's single-demo-user assumption; it is not production authentication.
+**Requirements:** Node.js 22.12+, npm, and a PostgreSQL 16+ database. Set `DATABASE_URL` to the application's pooled PostgreSQL connection string when the provider supplies one, and `DATABASE_URL_UNPOOLED` to the direct connection for Prisma CLI migrations (the legacy `DIRECT_URL` name remains a fallback). In local development, both can point at the same PostgreSQL database. The current-user adapter still follows the assignment's single-demo-user assumption; it is not production authentication.
 
 ```bash
 # 1. Clone the repository
@@ -217,7 +217,7 @@ cd Yugora
 
 # 2. Start PostgreSQL and configure both URLs in .env
 # DATABASE_URL is for the app (use a pooled URL when your provider supplies one).
-# DIRECT_URL is for Prisma migrations (use the provider's direct/non-pooled URL).
+# DATABASE_URL_UNPOOLED is for Prisma CLI migrations (use direct/non-pooled URL).
 cp .env.example .env
 
 # 3. Install packages and generate the Prisma Client
@@ -340,11 +340,11 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the PostgreSQL migrations into an ephemeral PostgreSQL 16 CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. The latest passing run (44372085961) reports 57 tests across architecture, persistence, HTTP, UI, copyright and browser suites. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, the exact Vercel migration/seed/build command, and 16 Chromium browser journeys against the production server. The latest passing run ([44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084)) reports 65 tests across configuration/avatar, architecture, persistence, HTTP, UI, copyright and browser suites. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
 
 ## Copyright and attribution
 
-**YUGORA original project work — Copyright © 2026 Manjeet2684. All rights reserved.** This repository is public for review and portfolio evaluation; public visibility does not grant permission to reuse the original code, schema, diagrams, documentation, or visual assets. Third-party packages and externally hosted placeholder photos remain under their respective owners' licences and terms. See [`COPYRIGHT.md`](COPYRIGHT.md), [`AUTHORS.md`](AUTHORS.md), and [`LICENSE`](LICENSE).
+**YUGORA original project work — Copyright © 2026 Manjeet2684. All rights reserved.** This repository is public for review and portfolio evaluation; public visibility does not grant permission to reuse the original code, schema, diagrams, documentation, or visual assets. Third-party packages remain under their respective owners' licences and terms. Seeded fictional profile avatars are generated locally as SVG data URLs. See [`COPYRIGHT.md`](COPYRIGHT.md), [`AUTHORS.md`](AUTHORS.md), and [`LICENSE`](LICENSE).
 
 ---
 
