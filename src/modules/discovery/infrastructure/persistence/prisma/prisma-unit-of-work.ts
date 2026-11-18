@@ -23,10 +23,10 @@ export class PrismaUnitOfWork implements UnitOfWorkPort {
     return this.prisma.$transaction(async (transaction) => {
       const lockPair = async (firstUserId: UserId, secondUserId: UserId): Promise<void> => {
         const pairKey = [firstUserId, secondUserId].sort().join("\\u0000");
-        await transaction.$queryRaw`SELECT pg_advisory_xact_lock(
+        await transaction.$queryRaw`SELECT public.yugora_acquire_pair_lock(
           ${YUGORA_ADVISORY_LOCK_NAMESPACE},
           hashtext(${pairKey})
-        )`;
+        ) AS locked`;
       };
 
       return operation({
