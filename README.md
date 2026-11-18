@@ -34,24 +34,32 @@ The project follows **Hexagonal Architecture (Ports and Adapters)**. Domain and 
 
 | Gate | Scope | Status |
 |---|---|---|
-| 1 | Domain, ports, use cases, composition root, API contracts, ADRs, architecture tests | Implemented and verified locally |
+| 1 | Domain, ports, use cases, composition root, API contracts, ADRs, architecture tests | Complete; code and CI checks are committed |
 | 2 | Prisma schema, SQLite persistence, migrations, deterministic seed data | Planned |
 | 3 | HTTP route handlers, validation, transactions, privacy integration tests | Planned |
 | 4 | Responsive UI, swipe gestures, motion, match experience | Planned |
 | 5 | End-to-end, accessibility, responsive and regression QA | Planned |
 
-## Repository import note
+## Run the architecture checks
 
-The complete Gate 1 source tree is supplied separately as yugora-gate1.zip in this project handoff. Download that archive into the repository root and extract it there, not into a nested folder:
+Requirements: Node.js 20.11+ and npm.
 
-    unzip -o yugora-gate1.zip -d .
     npm install
     npm run check
 
-The repository currently contains the project overview and architecture documentation; the Gate 1 source archive is the authoritative source package until its contents are expanded into tracked paths.
+The GitHub Actions workflow runs the same checks on pushes and pull requests.
+
+## Repository layout
+
+    src/modules/discovery/domain/         Domain entities and matching policy
+    src/modules/discovery/application/    Use cases, ports, DTOs and errors
+    src/modules/discovery/infrastructure/ Composition root and adapter boundary
+    src/shared/contracts/                 API contract types
+    tests/                                In-memory architecture tests
+    docs/                                 Architecture decisions and traceability
 
 ## Gate 1 verification
 
-The source package was checked locally with strict TypeScript type-checking and the Node architecture test suite: **14 tests passed, 0 failed**. Tests use in-memory adapters and do not claim to verify a real SQLite database, HTTP server, browser UI, or animations. Those are later-gate responsibilities.
+Strict TypeScript type-checking and the TypeScript build passed. The Node architecture test suite reports **14 passed, 0 failed**. Tests use in-memory adapters and do not claim to verify a real SQLite database, HTTP server, browser UI, or animations. Those are later-gate responsibilities.
 
 YUGORA — **Two sides. One genuine connection.**

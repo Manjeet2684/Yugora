@@ -1,13 +1,11 @@
 # Repository Bootstrap
 
-The repository overview and architecture decision records are checked in. The complete Gate 1 implementation is available in the project handoff archive yugora-gate1.zip.
+The repository is initialized and the Gate 1 source files are committed on main.
 
-To expand the implementation into regular tracked source files:
+To work locally:
 
-1. Download yugora-gate1.zip from the project handoff.
-2. Place it in this repository root.
-3. Run unzip -o yugora-gate1.zip -d .
-4. Run npm install && npm run check.
-5. Review the changed file list, then commit and push the expanded source tree.
+1. Clone the repository.
+2. Run npm install.
+3. Run npm run check.
 
-The archive was generated from the YUGORA-rebranded local project and excludes generated .build output.
+The architecture-check workflow runs the same validation automatically on pushes and pull requests. Later gates will add the persistence adapters, API routes, user interface, seeded profiles, and end-to-end validation.
