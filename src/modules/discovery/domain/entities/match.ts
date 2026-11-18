@@ -9,6 +9,27 @@ export interface Match {
   readonly matchedAt: Date;
 }
 
+const UTF8_ENCODER = new TextEncoder();
+
+/**
+ * PostgreSQL COLLATE "C" compares UTF-8 byte sequences. Match ordering in the
+ * domain must use the same comparison instead of JavaScript's UTF-16 ordering,
+ * otherwise some valid non-ASCII IDs can violate the database CHECK constraint.
+ */
+export function compareUserIdsForStorage(first: UserId, second: UserId): number {
+  const firstBytes = UTF8_ENCODER.encode(first);
+  const secondBytes = UTF8_ENCODER.encode(second);
+  const commonLength = Math.min(firstBytes.length, secondBytes.length);
+
+  for (let index = 0; index < commonLength; index += 1) {
+    const firstByte = firstBytes[index] ?? 0;
+    const secondByte = secondBytes[index] ?? 0;
+    if (firstByte !== secondByte) return firstByte - secondByte;
+  }
+
+  return firstBytes.length - secondBytes.length;
+}
+
 export function canonicalizeParticipants(
   first: UserId,
   second: UserId,
@@ -16,7 +37,9 @@ export function canonicalizeParticipants(
   if (first === second) {
     throw new Error("A user cannot match with themselves.");
   }
-  return first < second ? [first, second] : [second, first];
+  return compareUserIdsForStorage(first, second) < 0
+    ? [first, second]
+    : [second, first];
 }
 
 export function createMatch(input: {
