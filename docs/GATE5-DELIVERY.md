@@ -1,6 +1,6 @@
 # YUGORA — Gate 5 Browser QA and Release Review
 
-**Assignment-baseline CI:** Passed on the original SQLite implementation. The PostgreSQL hardening branch has its own expanded CI run and is not considered passed until that run completes successfully.
+**PostgreSQL CI:** Passed in [GitHub Actions run 44372085961](https://github.com/Manjeet2684/Yugora/actions/runs/44372085961), commit `58ca3787ee05865da6bc78f78fc2ef7030bc7feb`. The run used committed `package-lock.json` with `npm ci` and PostgreSQL 16. It passed 57 tests: 14 architecture, 11 persistence, 9 HTTP, 5 UI gesture, 2 copyright, and 16 Chromium browser tests, plus dependency audit and production build.
 
 ## Browser test approach
 
@@ -23,7 +23,7 @@ Playwright Test 1.65.1 drives Chromium against the built Next.js production serv
 
 ## Concurrency and privacy regression
 
-The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses must resolve to the same canonical Match ID, while PostgreSQL must contain one directed Swipe row and one canonical Match row for that pair. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
+The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses resolve to the same canonical Match ID, while PostgreSQL contains one directed Swipe row and one canonical Match row for that pair. A separate persistence test concurrently submits opposite-direction LIKE decisions and verifies the transaction-scoped advisory lock creates exactly one mutual Match. Both concurrency tests passed in the PostgreSQL 16 CI run. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
 
 ## Security boundary review
 
