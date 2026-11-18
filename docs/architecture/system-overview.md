@@ -28,7 +28,7 @@ Coy Discover is a standalone implementation for the SDE intern assignment. The a
 
 ### Infrastructure
 
-Gate 1 defines adapter interfaces only. Gate 2 will implement Prisma repositories and the SQLite Unit of Work. This separation lets persistence change without rewriting domain policy or use cases.
+The current `feature/postgres-production-hardening` branch implements Prisma 7 repositories and a PostgreSQL Unit of Work using `@prisma/adapter-pg`. The original SQLite milestones on `main` are historical; the domain and application contracts remain unchanged across the persistence migration.
 
 ## End-to-end data flow
 
@@ -78,4 +78,4 @@ No pending/non-mutual likes are queried for display.
 
 The intended runtime is a Node.js Next.js application. Database-backed route handlers must use the Node.js runtime. The browser and server use same-origin HTTP, avoiding a separate API port and CORS configuration for this assignment.
 
-For deployment, SQLite must live on storage with persistence guarantees. An ephemeral serverless filesystem or multiple uncoordinated local database copies are not acceptable for durable swipe history.
+The deployed runtime is designed for managed PostgreSQL rather than instance-local files. Application requests use the pooled `DATABASE_URL`; Prisma CLI migrations use the direct `DATABASE_URL_UNPOOLED` URL. Vercel Functions are configured for `sin1`, aligned with the selected Neon region. Neon connection and protected Preview verification remain pending.
