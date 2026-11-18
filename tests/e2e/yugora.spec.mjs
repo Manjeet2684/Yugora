@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { test, expect } from "@playwright/test";
 
-const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
-const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"https://i.pravatar.cc/jordan.jpg","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
-const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
+const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23334%22%2F%3E%3C%2Fsvg%3E","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
+const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23475%22%2F%3E%3C%2Fsvg%3E","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
+const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23334%22%2F%3E%3C%2Fsvg%3E","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
 const noMatch = { success: true, matched: false, matchCreated: false, match: null };
 const errorPayload = (message) => ({
   success: false,
@@ -70,7 +70,7 @@ async function openDiscover(page, options = {}) {
   return server;
 }
 
-test("real SQLite-backed browser journey persists a seeded mutual match across reload", async ({ page }) => {
+test("real PostgreSQL-backed browser journey persists a seeded mutual match across reload", async ({ page }) => {
   // This test intentionally does not intercept /feed, /swipe or /matches.
   // The seeded Riya profile has a directed incoming LIKE from its owner to demo-user.
   await page.goto("/");
@@ -244,8 +244,8 @@ test("matches failure has a separate retry path", async ({ page }) => {
 });
 
 test("broken profile photo falls back to the profile initial", async ({ page }) => {
-  await page.route("https://i.pravatar.cc/**", (route) => route.abort());
-  await openDiscover(page);
+  await page.route("**/intentionally-missing-avatar.svg", (route) => route.fulfill({ status: 404, contentType: "image/svg+xml", body: "" }));
+  await openDiscover(page, { profiles: [{ ...profileA, photoUrl: "/intentionally-missing-avatar.svg" }] });
   await expect(page.locator(".profile-card .profile-image img")).toHaveCount(0);
   await expect(page.locator(".profile-card .profile-image-fallback")).toBeVisible();
   await expect(page.locator(".profile-card .profile-image-fallback")).toHaveText("A");
