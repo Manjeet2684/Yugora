@@ -5,7 +5,7 @@ flowchart LR
   APP --> DOMAIN[Domain Entities & Policies<br/>Gate 1]
   APP --> PORTS[Outbound Repository Ports<br/>Gate 1]
   PORTS -. implemented by .-> ADAPTERS[Prisma Adapters<br/>Gate 2]
-  ADAPTERS --> DB[(SQLite)]
+  ADAPTERS --> DB[(PostgreSQL)]
   classDef current fill:#dcebe3,stroke:#527867,color:#1b3936
   classDef future fill:#f4eee5,stroke:#bca98e,color:#544737,stroke-dasharray:5 5
   class APP,DOMAIN,PORTS,ADAPTERS,DB current
