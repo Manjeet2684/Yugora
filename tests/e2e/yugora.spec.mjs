@@ -112,9 +112,10 @@ test("Home stays intentionally blank and navigation returns to Discover", async 
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
 });
 
-test("Pass records the direction and advances to the next profile", async ({ page }) => {
+test("Pass records the direction, gives accurate feedback and advances", async ({ page }) => {
   const server = await openDiscover(page);
   await page.getByRole("button", { name: "Pass on this profile" }).click();
+  await expect(page.locator(".screen-reader-status")).toHaveText("You passed on Avery Morgan.");
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   expect(server.swipeRequests).toEqual([{ profileId: profileA.id, direction: "PASS" }]);
 });
