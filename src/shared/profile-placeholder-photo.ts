@@ -25,9 +25,11 @@ function escapeXml(value: string): string {
 
 function initialsFor(name: string): string {
   const words = name.trim().split(/\s+/u).filter(Boolean);
+  const firstWord = words[0] ?? "";
+  const lastWord = words[words.length - 1] ?? "";
   const initials = words.length >= 2
-    ? `${words[0]?.[0] ?? ""}${words[words.length - 1]?.[0] ?? ""}`
-    : (words[0] ?? "").slice(0, 2);
+    ? `${Array.from(firstWord)[0] ?? ""}${Array.from(lastWord)[0] ?? ""}`
+    : Array.from(firstWord).slice(0, 2).join("");
   return escapeXml(initials.toLocaleUpperCase("en-US") || "YU");
 }
 
