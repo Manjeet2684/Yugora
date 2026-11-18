@@ -29,6 +29,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://yugora:yugora@localhost:5432/yugora?schema=public
+      DIRECT_URL: postgresql://yugora:yugora@localhost:5432/yugora?schema=public
       DEMO_USER_ID: demo-user
       NEXT_TELEMETRY_DISABLED: 1
     steps:
@@ -40,6 +41,8 @@ jobs:
           node-version: 22
       - name: Resolve and lock PostgreSQL adapter dependency graph
         run: npm install --package-lock-only --ignore-scripts --no-fund --no-audit
+      - name: Preserve original project author metadata in lockfile
+        run: npm run lock:normalize
       - name: Preserve generated lockfile for review
         uses: actions/upload-artifact@v4
         with:
