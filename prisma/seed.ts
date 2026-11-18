@@ -2,6 +2,7 @@
 // Fictional demo data authored for the YUGORA assignment. No real user data is used.
 import "dotenv/config";
 import { createPrismaClient } from "../src/infrastructure/database/prisma-client.js";
+import { createPlaceholderProfilePhotoUrl } from "../src/shared/profile-placeholder-photo.js";
 
 const prisma = createPrismaClient();
 const demoUserId = process.env.DEMO_USER_ID?.trim() || "demo-user";
@@ -57,7 +58,7 @@ async function main(): Promise<void> {
         ownerUserId,
         name: profile.name,
         age: profile.age,
-        photoUrl: `https://i.pravatar.cc/600?img=${profile.photo}`,
+        photoUrl: createPlaceholderProfilePhotoUrl(profile.name, profile.photo),
         bio: profile.bio,
         locationLabel: profile.location,
         isActive: true,
@@ -68,7 +69,7 @@ async function main(): Promise<void> {
         ownerUserId,
         name: profile.name,
         age: profile.age,
-        photoUrl: `https://i.pravatar.cc/600?img=${profile.photo}`,
+        photoUrl: createPlaceholderProfilePhotoUrl(profile.name, profile.photo),
         bio: profile.bio,
         locationLabel: profile.location,
         displayOrder: index + 1,
