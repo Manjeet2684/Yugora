@@ -1,10 +1,10 @@
 # YUGORA — Gate 5 Browser QA and Release Review
 
-**CI status:** Passed. [Final verified GitHub Actions run](https://github.com/Manjeet2684/Yugora/actions/runs/44365785154), commit `d11b72e167c1f9517f4380bad3c2b9d635574108`.
+**Assignment-baseline CI:** Passed on the original SQLite implementation. The PostgreSQL hardening branch has its own expanded CI run and is not considered passed until that run completes successfully.
 
 ## Browser test approach
 
-Playwright Test 1.65.1 drives Chromium against the built Next.js production server. Most UI journeys use page-level API interception for deterministic response/failure coverage. One unmocked browser journey uses the same pre-seeded SQLite database as the deployed Next.js process, exercises the actual GET /feed → POST /swipe → GET /matches flow, reloads the page, and verifies that the profile is excluded and the mutual match persists. This complements the independent real-SQLite HTTP and persistence suites.
+Playwright Test 1.65.1 drives Chromium against the built Next.js production server. Most UI journeys use page-level API interception for deterministic response/failure coverage. One unmocked browser journey uses the same pre-seeded PostgreSQL database as the deployed Next.js process, exercises the actual GET /feed → POST /swipe → GET /matches flow, reloads the page, and verifies that the profile is excluded and the mutual match persists. This complements the independent real-PostgreSQL HTTP and persistence suites.
 
 ## Browser scenarios
 
@@ -15,7 +15,7 @@ Playwright Test 1.65.1 drives Chromium against the built Next.js production serv
 - Mutual Like opens the dialog only when the server returns a Match DTO; the Matches page renders that match.
 - Match dialog receives focus, traps keyboard focus, closes with Escape, and restores prior focus when it remains available.
 - Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated device submit the same swipe shape as action buttons.
-- Deterministic fixture-backed reload behaviour is covered separately from the unmocked SQLite-backed persistence journey.
+- Deterministic fixture-backed reload behaviour is covered separately from the unmocked PostgreSQL-backed persistence journey.
 - Empty feed, broken image, feed error, swipe error and Matches error have independent retry/fallback tests.
 - Mobile navigation is visible, the desktop sidebar is hidden, the card remains in viewport and the page has no horizontal overflow at 390px.
 - Reduced-motion preference is respected and visible buttons have accessible names.
@@ -23,7 +23,7 @@ Playwright Test 1.65.1 drives Chromium against the built Next.js production serv
 
 ## Concurrency and privacy regression
 
-The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses must resolve to the same canonical Match ID, while SQLite must contain one directed Swipe row and one canonical Match row for that pair. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
+The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses must resolve to the same canonical Match ID, while PostgreSQL must contain one directed Swipe row and one canonical Match row for that pair. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
 
 ## Security boundary review
 
