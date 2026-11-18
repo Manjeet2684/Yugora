@@ -13,7 +13,7 @@
 
 The core Coy Part B implementation is present: 30 fictional seeded profiles, eight incoming demo likes, Discover swipe interaction, pass/like persistence, mutual-only matches, a Matches view, and the three required API routes. The PostgreSQL hardening branch replaces the original SQLite persistence adapter with Prisma 7 and PostgreSQL migrations, constraints, triggers, and transaction-scoped pair locking.
 
-The latest complete GitHub Actions run for the reviewed code commit is [44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084), on commit `d14867668d60e4e657744a9e0d9c4f2ac98ddd78`. It passed **65 tests**: 7 configuration/avatar, 14 architecture, 11 persistence, 10 HTTP, 5 UI gesture, 2 copyright and 16 Chromium browser tests. The run also passed schema validation, TypeScript checks, PostgreSQL 16 migration/seed tests, the exact Vercel migration/seed/build command, production build, and `npm audit --audit-level=high` with 0 reported vulnerabilities.
+The latest complete GitHub Actions run for the reviewed code commit is [44398530835](https://github.com/Manjeet2684/Yugora/actions/runs/44398530835), on commit `8791a8a154b024fcf6faa0dc6c8f25b53e82b457`. It passed **69 tests**: 8 configuration/avatar, 15 architecture, 12 PostgreSQL persistence, 11 HTTP, 5 UI gesture, 2 copyright and 16 Chromium browser tests. The run also passed schema validation, TypeScript checks, PostgreSQL 16 migration/seed tests, the exact Vercel migration/seed/build command, production build, and `npm audit --audit-level=high` with 0 reported vulnerabilities.
 
 **Current conclusion:** Part B is substantially implemented and has strong automated evidence. Hosted acceptance is not complete because the Neon-to-Vercel connection and Preview deployment are still pending. Part A's private Coy walkthrough remains unverified. Do not merge PR #8 or expose the shared demo publicly until the remaining release gates below are closed.
 
@@ -70,7 +70,7 @@ The project is not live yet. SSO protection is a useful safeguard for the shared
 
 ### Neon integration wizard
 
-The supplied screenshot shows the Connect Project step, not a completed connection. The current wizard choices shown were Free plan, Singapore `sin1`, Auth enabled, Realtime disabled, and Vercel environments Production and Preview. The Custom Prefix field showed `STORAGE`; Preview/Production branch checkboxes were not selected in the captured screen.
+The Neon Marketplace integration is installed on the team Free plan, but its integration configuration currently has `projects: []`. The supplied screenshot shows the Connect Project step, not a completed project connection. The current wizard choices shown were Free plan, Singapore `sin1`, Auth enabled, Realtime disabled, and Vercel environments Production and Preview. The Custom Prefix field showed `STORAGE`; Preview/Production branch checkboxes were not selected in the captured screen.
 
 **Required connection choices:**
 - Leave Custom Prefix blank. Vercel prepends a custom prefix to every generated environment variable name; `STORAGE` would produce names such as `STORAGE_DATABASE_URL` and `STORAGE_DATABASE_URL_UNPOOLED`, which the application does not read.
@@ -149,7 +149,7 @@ Do not describe these outstanding checks as completed. The current review does n
 
 ## Release decision
 
-**Part B code:** substantially complete; the latest reviewed PostgreSQL code commit has 65 passing automated checks.  
+**Part B code:** substantially complete; the latest reviewed PostgreSQL code commit has 69 passing automated checks.  
 **Hosted Preview:** blocked on completing the Neon Connect Project step and verifying the deployed environment.  
 **Public production:** not approved while the application uses a shared unauthenticated demo identity.  
 **Part A:** still requires the actual private Coy walkthrough and applicant validation of the two drafted recommendations.
