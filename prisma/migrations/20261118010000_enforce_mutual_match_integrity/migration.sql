@@ -20,13 +20,12 @@ WHERE NOT EXISTS (
 CREATE OR REPLACE FUNCTION yugora_acquire_pair_lock(lock_namespace INTEGER, lock_key INTEGER)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
-SET search_path = pg_catalog, public
-AS $
+AS $function$
 BEGIN
     PERFORM pg_catalog.pg_advisory_xact_lock(lock_namespace, lock_key);
     RETURN TRUE;
 END;
-$;
+$function$;
 
 CREATE OR REPLACE FUNCTION yugora_enforce_match_reciprocal_like()
 RETURNS TRIGGER
