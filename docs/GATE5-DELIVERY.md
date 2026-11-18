@@ -2,20 +2,20 @@
 
 ## Latest complete verification
 
-The PostgreSQL hardening branch passed [GitHub Actions run 44393338816](https://github.com/Manjeet2684/Yugora/actions/runs/44393338816) on commit `0ca19a4fc1e801a626b26067e31878c260bfdf3d`.
+The PostgreSQL hardening branch passed [GitHub Actions run 44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084) on commit `d14867668d60e4e657744a9e0d9c4f2ac98ddd78`.
 
 | Suite | Tests passed |
 |---|---:|
 | Migration URL and local avatar configuration | 7 |
 | Architecture | 14 |
 | PostgreSQL persistence | 11 |
-| HTTP integration | 9 |
+| HTTP integration | 10 |
 | UI gesture logic | 5 |
 | Copyright checks | 2 |
 | Chromium browser journeys | 16 |
-| **Total** | **64** |
+| **Total** | **65** |
 
-The run also passed PostgreSQL 16 migrations and repeatable seeding, Prisma schema validation, TypeScript checks, Next.js production build and `npm audit --audit-level=high` (0 vulnerabilities reported).
+The run also passed PostgreSQL 16 migrations and repeatable seeding, Prisma schema validation, TypeScript checks, the exact Vercel migration/seed/build command, Next.js production build and `npm audit --audit-level=high` (0 vulnerabilities reported).
 
 ## Browser and API scenarios
 
@@ -39,7 +39,7 @@ Coverage includes:
 - Vercel Function region is configured to `sin1`, aligned with the selected Neon Singapore region.
 - Seeded fictional profiles use self-contained SVG data URLs. Browser requests no longer contact the former third-party avatar host.
 - CI includes migration URL precedence and avatar escaping/data-URL regression tests.
-- Vercel Firewall has a valid active rate-limit rule for `POST /swipe`: 20 requests per source IP per 60 seconds.
+- Vercel Firewall has a valid active rate-limit rule for `GET /feed`, `POST /swipe` and `GET /matches`: 20 requests per source IP per 60 seconds.
 
 ## Hosted verification still outstanding
 
