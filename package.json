@@ -31,7 +31,8 @@
     "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
     "test:copyright": "node --test tests/copyright-headers.test.mjs",
-    "lock:normalize": "node scripts/normalize-package-lock.mjs"
+    "lock:normalize": "node scripts/normalize-package-lock.mjs",
+    "vercel-build": "npm run db:deploy && npm run db:seed && npm run build"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
