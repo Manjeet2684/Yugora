@@ -23,7 +23,7 @@ LANGUAGE plpgsql
 SET search_path = pg_catalog, public
 AS $
 BEGIN
-    PERFORM pg_advisory_xact_lock(lock_namespace, lock_key);
+    PERFORM pg_catalog.pg_advisory_xact_lock(lock_namespace, lock_key);
     RETURN TRUE;
 END;
 $;
