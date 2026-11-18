@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { test, expect } from "@playwright/test";
 
-const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://images.example.test/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
-const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"https://images.example.test/jordan.jpg","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
-const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://images.example.test/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
+const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
+const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"https://i.pravatar.cc/jordan.jpg","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
+const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
 const noMatch = { success: true, matched: false, matchCreated: false, match: null };
 const errorPayload = (message) => ({
   success: false,
