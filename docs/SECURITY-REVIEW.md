@@ -8,9 +8,9 @@
 
 ## Executive assessment
 
-The assignment's Part B implementation passed its original CI baseline: 14 architecture tests, 10 persistence tests, 9 HTTP tests, 5 UI gesture tests, 2 copyright tests, and 16 Chromium browser tests (56 tests total), with a successful production build and a zero-vulnerability result from `npm audit --audit-level=high` at that point in time.
+The assignment baseline passed its original CI with 56 tests. The PostgreSQL hardening branch has now passed a separate full GitHub Actions run **44372085961** against PostgreSQL 16 with the committed lockfile and strict `npm ci`: 14 architecture, 11 persistence, 9 HTTP, 5 UI gesture, 2 copyright, and 16 Chromium browser tests (**57 tests total**). Prisma schema validation, TypeScript checks, the Next.js production build, and `npm audit --audit-level=high` also passed.
 
-The production-hardening branch changes the Prisma provider and driver to PostgreSQL, replaces SQLite-specific schema/migrations with PostgreSQL DDL and PL/pgSQL triggers, makes a PostgreSQL URL mandatory at runtime, and adds a PostgreSQL transaction-scoped advisory lock plus a simultaneous reciprocal-LIKE regression test. **Those new changes have not yet passed GitHub Actions**; the result must be verified before merging or creating a deployable project. A managed database has not yet been provisioned or connected.
+The PostgreSQL branch migrates Prisma to `@prisma/adapter-pg`, replaces the original SQLite migrations with PostgreSQL DDL and PL/pgSQL triggers, requires an explicit PostgreSQL URL at runtime, and uses a transaction-scoped advisory lock to serialize opposite-direction LIKE decisions. The CI database is a disposable PostgreSQL 16 service—not a managed provider connected to Vercel. A hosted database, Vercel project, and preview deployment have not yet been provisioned.
 
 No critical exploit was confirmed in the scoped baseline code review. That is not a claim that the project is vulnerability-free.
 
@@ -24,9 +24,9 @@ No critical exploit was confirmed in the scoped baseline code review. That is no
 | Some profiles already liked the demo user | Seed creates eight directed incoming LIKE rows | Pass on assignment baseline |
 | One profile card at a time; desktop and touch actions | Chromium browser and gesture tests | Pass on assignment baseline |
 | Empty state and error recovery | UI and browser tests | Pass on assignment baseline |
-| Mutual-only Match; incoming interest remains private | Use case, repository guard, database trigger design, HTTP tests and browser tests | Pass on assignment baseline; PostgreSQL trigger port awaits CI |
+| Mutual-only Match; incoming interest remains private | Use case, repository guard, database trigger design, HTTP tests and browser tests | Pass; PostgreSQL migrations/triggers verified by CI |
 | Required API routes and persistent swipe/match state | Route handlers and database-backed browser reload journey | Pass on assignment baseline |
-| PostgreSQL deployment persistence | PostgreSQL adapter, migrations and CI service added on hardening branch | Awaiting CI and managed-database verification |
+| PostgreSQL deployment persistence | PostgreSQL adapter, migrations and CI service added on hardening branch | CI passed on PostgreSQL 16; managed-provider verification outstanding |
 | Coy Part A sign-up walkthrough | OTP, email verification, invite, slot screen were not personally exercised in the private app | Not verified |
 | Two core-feature recommendations | Preliminary public-product recommendations recorded in PART-A-PRODUCT-RECOMMENDATIONS.md | Draft; applicant validation required |
 
@@ -34,11 +34,11 @@ No critical exploit was confirmed in the scoped baseline code review. That is no
 
 The assignment baseline has strict JSON parsing, a 4 KiB streaming request body cap, allowlisted swipe fields, server-selected acting identity, active-profile lookup, self-swipe rejection, idempotent identical decisions, conflicting-decision rejection, safe error responses, private/no-store API responses, and security headers. The persistence layer enforces pair uniqueness, adult-only mock profiles, no self-swipes, valid decision directions, and mutual-match invariants.
 
-The PostgreSQL branch retains these application controls and migrates database-level constraints to PostgreSQL. The PostgreSQL migration adds CHECK constraints and PL/pgSQL triggers for reciprocal-LIKE-only Match inserts/updates, immutable Swipe decision fields, and deletion of a Match when a supporting Swipe is removed. The SQL trigger behaviour and the transaction lock must be exercised by the new PostgreSQL CI run before acceptance.
+The PostgreSQL branch retains these application controls and migrates database-level constraints to PostgreSQL. The PostgreSQL migration adds CHECK constraints and PL/pgSQL triggers for reciprocal-LIKE-only Match inserts/updates, immutable Swipe decision fields, and deletion of a Match when a supporting Swipe is removed. The SQL trigger behaviour and transaction lock passed the PostgreSQL 16 integration suite in run 44372085961.
 
 ### Concurrent reciprocal LIKEs
 
-A race existed in which two users could LIKE each other at almost the same time. Under normal READ COMMITTED transaction isolation, each transaction might fail to see the other's uncommitted Swipe and both could commit without creating the Match. The hardening branch serializes the same unordered user pair with a transaction-scoped PostgreSQL advisory lock before reading/inserting a Swipe. A regression test starts both directed LIKE operations concurrently and asserts that both Swipe rows and exactly one canonical Match persist. This is a new test awaiting CI; it is not yet a verified passing result.
+A race existed in which two users could LIKE each other at almost the same time. Under normal READ COMMITTED transaction isolation, each transaction might fail to see the other's uncommitted Swipe and both could commit without creating the Match. The hardening branch serializes the same unordered user pair with a transaction-scoped PostgreSQL advisory lock before reading/inserting a Swipe. A regression test starts both directed LIKE operations concurrently and asserts that both Swipe rows and exactly one canonical Match persist. This test passed in PostgreSQL 16 CI run 44372085961.
 
 ## Findings and release risk
 
@@ -94,7 +94,7 @@ A zero-vulnerability `npm audit` means the package audit reported no known vulne
 
 ## Not yet performed
 
-- PostgreSQL hardening-branch CI, including new migrations, triggers and reciprocal-concurrency regression test.
+- Managed provider-specific connection/pooling, migration permissions, and cross-serverless-instance persistence checks.
 - Connection and migration verification against a provisioned managed PostgreSQL resource.
 - Vercel Preview deployment, and persistence checks across separate serverless invocations.
 - Vercel Firewall rule activation and rate-limit attack tests.
