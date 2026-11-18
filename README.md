@@ -191,7 +191,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 ## Security review and Vercel readiness
 
-The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel storage assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The feature branch replaces the file-backed adapter with PostgreSQL; this migration still requires a passing PostgreSQL CI run and a provisioned managed database before it can be called deployment-ready. Durable edge rate limiting must also be configured before public exposure.
+The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel readiness assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The PostgreSQL hardening branch has passed CI against PostgreSQL 16, including the database concurrency regression, but a managed database, Vercel Preview, and durable edge rate limits are still unprovisioned. Keep the shared demo behind deployment protection; do not expose the shared demo identity publicly.
 
 ## Technology choices
 
@@ -336,9 +336,9 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
 
 ## Quality gates
 
-Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the PostgreSQL migrations into an ephemeral CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
+Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the PostgreSQL migrations into an ephemeral PostgreSQL 16 CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. The latest passing run (44372085961) reports 57 tests across architecture, persistence, HTTP, UI, copyright and browser suites. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
 
 ## Copyright and attribution
 
