@@ -13,7 +13,7 @@
 
 The core Coy Part B implementation is present: 30 fictional seeded profiles, eight incoming demo likes, Discover swipe interaction, pass/like persistence, mutual-only matches, a Matches view, and the three required API routes. The PostgreSQL hardening branch replaces the original SQLite persistence adapter with Prisma 7 and PostgreSQL migrations, constraints, triggers, and transaction-scoped pair locking.
 
-The latest complete GitHub Actions run for the reviewed code commit is [44393338816](https://github.com/Manjeet2684/Yugora/actions/runs/44393338816). It passed **64 tests**: 7 configuration/avatar, 14 architecture, 11 persistence, 9 HTTP, 5 UI gesture, 2 copyright and 16 Chromium browser tests. The run also passed schema validation, TypeScript checks, PostgreSQL 16 migration/seed tests, production build, and `npm audit --audit-level=high` with 0 reported vulnerabilities.
+The latest complete GitHub Actions run for the reviewed code commit is [44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084), on commit `d14867668d60e4e657744a9e0d9c4f2ac98ddd78`. It passed **65 tests**: 7 configuration/avatar, 14 architecture, 11 persistence, 10 HTTP, 5 UI gesture, 2 copyright and 16 Chromium browser tests. The run also passed schema validation, TypeScript checks, PostgreSQL 16 migration/seed tests, the exact Vercel migration/seed/build command, production build, and `npm audit --audit-level=high` with 0 reported vulnerabilities.
 
 **Current conclusion:** Part B is substantially implemented and has strong automated evidence. Hosted acceptance is not complete because the Neon-to-Vercel connection and Preview deployment are still pending. Part A's private Coy walkthrough remains unverified. Do not merge PR #8 or expose the shared demo publicly until the remaining release gates below are closed.
 
@@ -91,13 +91,13 @@ The Vercel build command runs migrations, the idempotent demo seed, then the Nex
 
 A custom firewall configuration is enabled and read back as active/valid. It contains one rule:
 
-- Match: `POST /swipe`
+- Match: `GET /feed`, `POST /swipe`, and `GET /matches`
 - Key: source IP
 - Algorithm: fixed window
-- Threshold: 20 requests per IP per 60 seconds
+- Threshold: 20 requests per IP per 60 seconds across the matched API rule
 - Mitigation: rate limit
 
-This protects the state-changing endpoint without rate-limiting normal feed or match reads. The configuration is valid and active in Vercel, but its actual HTTP 429 behavior cannot be tested until a deployment exists.
+The rule is valid and active in Vercel and protects all three assignment API routes. Its actual HTTP 429 behavior cannot be tested until a deployment exists.
 
 ## Findings and release risks
 
@@ -149,7 +149,7 @@ Do not describe these outstanding checks as completed. The current review does n
 
 ## Release decision
 
-**Part B code:** substantially complete; PostgreSQL branch has 64 passing automated checks.  
+**Part B code:** substantially complete; the latest reviewed PostgreSQL code commit has 65 passing automated checks.  
 **Hosted Preview:** blocked on completing the Neon Connect Project step and verifying the deployed environment.  
 **Public production:** not approved while the application uses a shared unauthenticated demo identity.  
 **Part A:** still requires the actual private Coy walkthrough and applicant validation of the two drafted recommendations.
