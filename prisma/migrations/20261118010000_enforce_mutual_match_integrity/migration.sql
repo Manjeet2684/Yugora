@@ -1,76 +1,99 @@
 -- Copyright (c) 2026 Manjeet2684. All rights reserved.
--- Enforce the product's mutual-interest invariant at the SQLite boundary.
--- A Match row is valid only while both directed LIKE records exist.
+-- Enforce YUGORA's mutual-interest invariants at the PostgreSQL boundary.
 
--- Clean up any legacy/corrupt Match rows before enforcing the invariant.
-DELETE FROM "Match"
+-- Remove legacy or corrupt rows before activating the invariant.
+DELETE FROM "Match" AS m
 WHERE NOT EXISTS (
     SELECT 1
-    FROM "Swipe" AS "outgoing"
-    INNER JOIN "Swipe" AS "incoming"
-      ON "incoming"."actorUserId" = "Match"."userHighId"
-     AND "incoming"."targetUserId" = "Match"."userLowId"
-     AND "incoming"."direction" = 'LIKE'
-    WHERE "outgoing"."actorUserId" = "Match"."userLowId"
-      AND "outgoing"."targetUserId" = "Match"."userHighId"
-      AND "outgoing"."direction" = 'LIKE'
+    FROM "Swipe" AS outgoing
+    INNER JOIN "Swipe" AS incoming
+      ON incoming."actorUserId" = m."userHighId"
+     AND incoming."targetUserId" = m."userLowId"
+     AND incoming."direction" = 'LIKE'
+    WHERE outgoing."actorUserId" = m."userLowId"
+      AND outgoing."targetUserId" = m."userHighId"
+      AND outgoing."direction" = 'LIKE'
 );
+
+CREATE OR REPLACE FUNCTION yugora_enforce_match_reciprocal_like()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM "Swipe" AS outgoing
+        INNER JOIN "Swipe" AS incoming
+          ON incoming."actorUserId" = NEW."userHighId"
+         AND incoming."targetUserId" = NEW."userLowId"
+         AND incoming."direction" = 'LIKE'
+        WHERE outgoing."actorUserId" = NEW."userLowId"
+          AND outgoing."targetUserId" = NEW."userHighId"
+          AND outgoing."direction" = 'LIKE'
+    ) THEN
+        RAISE EXCEPTION USING
+          ERRCODE = '23514',
+          MESSAGE = 'Match requires reciprocal LIKE swipes';
+    END IF;
+    RETURN NEW;
+END;
+$$;
 
 CREATE TRIGGER "Match_require_reciprocal_like_insert"
 BEFORE INSERT ON "Match"
 FOR EACH ROW
-WHEN NOT EXISTS (
-    SELECT 1
-    FROM "Swipe" AS "outgoing"
-    INNER JOIN "Swipe" AS "incoming"
-      ON "incoming"."actorUserId" = NEW."userHighId"
-     AND "incoming"."targetUserId" = NEW."userLowId"
-     AND "incoming"."direction" = 'LIKE'
-    WHERE "outgoing"."actorUserId" = NEW."userLowId"
-      AND "outgoing"."targetUserId" = NEW."userHighId"
-      AND "outgoing"."direction" = 'LIKE'
-)
-BEGIN
-    SELECT RAISE(ABORT, 'Match requires reciprocal LIKE swipes');
-END;
+EXECUTE FUNCTION yugora_enforce_match_reciprocal_like();
 
 CREATE TRIGGER "Match_require_reciprocal_like_update"
 BEFORE UPDATE OF "userLowId", "userHighId" ON "Match"
 FOR EACH ROW
-WHEN NOT EXISTS (
-    SELECT 1
-    FROM "Swipe" AS "outgoing"
-    INNER JOIN "Swipe" AS "incoming"
-      ON "incoming"."actorUserId" = NEW."userHighId"
-     AND "incoming"."targetUserId" = NEW."userLowId"
-     AND "incoming"."direction" = 'LIKE'
-    WHERE "outgoing"."actorUserId" = NEW."userLowId"
-      AND "outgoing"."targetUserId" = NEW."userHighId"
-      AND "outgoing"."direction" = 'LIKE'
-)
-BEGIN
-    SELECT RAISE(ABORT, 'Match requires reciprocal LIKE swipes');
-END;
+EXECUTE FUNCTION yugora_enforce_match_reciprocal_like();
 
--- A persisted swipe is a durable decision. Changing direction or participants
--- would bypass the application's conflicting-decision rule.
+CREATE OR REPLACE FUNCTION yugora_reject_swipe_decision_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF OLD."actorUserId" IS DISTINCT FROM NEW."actorUserId"
+       OR OLD."targetUserId" IS DISTINCT FROM NEW."targetUserId"
+       OR OLD."direction" IS DISTINCT FROM NEW."direction" THEN
+        RAISE EXCEPTION USING
+          ERRCODE = '23514',
+          MESSAGE = 'Persisted swipe decisions are immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
 CREATE TRIGGER "Swipe_decision_fields_are_immutable"
-BEFORE UPDATE OF "actorUserId", "targetUserId", "direction" ON "Swipe"
+BEFORE UPDATE ON "Swipe"
 FOR EACH ROW
-WHEN OLD."actorUserId" <> NEW."actorUserId"
-  OR OLD."targetUserId" <> NEW."targetUserId"
-  OR OLD."direction" <> NEW."direction"
-BEGIN
-    SELECT RAISE(ABORT, 'Persisted swipe decisions are immutable');
-END;
+EXECUTE FUNCTION yugora_reject_swipe_decision_update();
 
--- If either side's swipe is deleted (including as part of user deletion),
--- remove the match so the database cannot retain a stale mutual connection.
+CREATE OR REPLACE FUNCTION yugora_remove_match_after_swipe_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    lower_user_id TEXT;
+    higher_user_id TEXT;
+BEGIN
+    IF OLD."actorUserId" COLLATE "C" < OLD."targetUserId" COLLATE "C" THEN
+        lower_user_id := OLD."actorUserId";
+        higher_user_id := OLD."targetUserId";
+    ELSE
+        lower_user_id := OLD."targetUserId";
+        higher_user_id := OLD."actorUserId";
+    END IF;
+
+    DELETE FROM "Match"
+    WHERE "userLowId" = lower_user_id
+      AND "userHighId" = higher_user_id;
+    RETURN OLD;
+END;
+$$;
+
 CREATE TRIGGER "Swipe_delete_removes_pair_match"
 AFTER DELETE ON "Swipe"
 FOR EACH ROW
-BEGIN
-    DELETE FROM "Match"
-    WHERE ("userLowId" = OLD."actorUserId" AND "userHighId" = OLD."targetUserId")
-       OR ("userLowId" = OLD."targetUserId" AND "userHighId" = OLD."actorUserId");
-END;
+EXECUTE FUNCTION yugora_remove_match_after_swipe_delete();
