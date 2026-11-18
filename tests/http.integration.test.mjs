@@ -186,9 +186,11 @@ test('GET /matches exposes confirmed mutual matches, never one-sided incoming in
   await assertPrivateNoStore(response);
   const body = await response.json();
   assert.deepEqual(Object.keys(body), ['matches']);
-  assert.equal(body.matches.length, 1);
-  assert.equal(body.matches[0].profile.id, profileIds.mutualProfile);
-  assert.notEqual(body.matches[0].profile.id, profileIds.oneSidedProfile);
+  assert.equal(body.matches.length, 2);
+  const matchedProfileIds = body.matches.map((item) => item.profile.id);
+  assert.ok(matchedProfileIds.includes(profileIds.mutualProfile));
+  assert.ok(matchedProfileIds.includes(profileIds.concurrentMutualProfile));
+  assert.ok(!matchedProfileIds.includes(profileIds.oneSidedProfile));
   const serialized = JSON.stringify(body);
   assert.equal(serialized.includes('likedYou'), false);
   assert.equal(serialized.includes('incomingLike'), false);
