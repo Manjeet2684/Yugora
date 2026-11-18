@@ -2,6 +2,7 @@
 import type { ProfileRepositoryPort } from "./profile-repository.port.js";
 import type { SwipeRepositoryPort } from "./swipe-repository.port.js";
 import type { MatchRepositoryPort } from "./match-repository.port.js";
+import type { UserId } from "../../domain/values/identifiers.js";
 
 export interface DiscoveryTransactionRepositories {
   readonly profiles: ProfileRepositoryPort;
@@ -11,8 +12,7 @@ export interface DiscoveryTransactionRepositories {
    * Serialize decisions for the same unordered user pair within this transaction.
    * The adapter must release the lock automatically on commit or rollback.
    */
-  lockPair(firstUserId: import("../../domain/values/identifiers.js").UserId,
-    secondUserId: import("../../domain/values/identifiers.js").UserId): Promise<void>;
+  lockPair(firstUserId: UserId, secondUserId: UserId): Promise<void>;
 }
 
 /** Executes all callback operations in one atomic persistence transaction. */
