@@ -49,9 +49,10 @@
 ### Browser QA implemented
 - [x] Chromium runs against the built Next.js production server in CI.
 - [x] Pass, one-sided Like, mutual-match celebration and Matches rendering journeys.
+- [x] Concurrent identical mutual-LIKE requests converge on one Swipe and one canonical Match row in SQLite.
 - [x] Swipe decision remains absent from the feed after reload (deterministic server fixture); SQLite/HTTP tests verify persisted decisions.
 - [x] Empty feed, feed failure/retry, swipe failure/retry and matches failure/retry.
-- [x] Desktop action buttons, mobile-width pointer drag and keyboard arrows call the same swipe operation.
+- [x] Desktop action buttons, native Chromium mobile touchscreen drag and keyboard arrows call the same swipe operation.
 - [x] Broken profile image falls back to initials.
 - [x] Match dialog receives focus, traps Tab/Shift+Tab, closes on Escape and restores focus when possible.
 - [x] Reduced-motion preference and accessible button names.

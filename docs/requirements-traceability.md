@@ -37,3 +37,5 @@
 | Empty feed and broken-image fallback | Playwright | Complete |
 | Baseline browser security headers and no permissive CORS response | Production-server header assertions | Complete |
 | Production identity, rate limiting, deployment and monitoring | Release configuration / operational work | Blocked; not part of assignment demo |
+
+| Concurrent duplicate Like requests | HTTP integration race test asserts one directed swipe and one canonical mutual Match | Complete |

@@ -13,12 +13,16 @@ Playwright Test 1.65.1 drives Chromium against the built Next.js production serv
 - Pass and one-sided Like submit their correct profile/direction payloads.
 - Mutual Like opens the dialog only when the server returns a Match DTO; the Matches page renders that match.
 - Match dialog receives focus, traps keyboard focus, closes with Escape, and restores prior focus when it remains available.
-- Keyboard arrow keys and mobile-width pointer drags submit the same swipe shape as action buttons.
+- Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated devices submit the same swipe shape as action buttons.
 - Decisions are omitted by the fixture feed after reload; real persistence behavior remains covered by database/API suites.
 - Empty feed, broken image, feed error, swipe error and Matches error have independent retry/fallback tests.
 - Mobile navigation is visible, the desktop sidebar is hidden, the card remains in viewport and the page has no horizontal overflow at 390px.
 - Reduced-motion preference is respected and visible buttons have accessible names.
 - Production responses include baseline security headers and no permissive Access-Control-Allow-Origin header.
+
+## Concurrency and privacy regression
+
+The HTTP integration suite sends two identical LIKE requests concurrently for a profile with a seeded incoming LIKE. Both responses must resolve to the same canonical Match ID, while SQLite must contain one directed Swipe row and one canonical Match row for that pair. Existing privacy assertions verify incoming one-sided interest is absent from feed and matches DTOs.
 
 ## Security boundary review
 

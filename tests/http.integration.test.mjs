@@ -16,6 +16,7 @@ const testIds = {
   oneSided: asUserId(unique('http-one-sided')),
   alreadyPassed: asUserId(unique('http-already-passed')),
   passTarget: asUserId(unique('http-pass-target')),
+  concurrentMutual: asUserId(unique('http-concurrent-mutual')),
 };
 let handlers;
 let profileIds;
@@ -68,17 +69,19 @@ async function assertPrivateNoStore(response) {
 
 before(async () => {
   await Promise.all(Object.values(testIds).map(ensureUser));
-  const [mutualProfile, oneSidedProfile, alreadyPassedProfile, passProfile, ownProfile] = await Promise.all([
+  const [mutualProfile, oneSidedProfile, alreadyPassedProfile, passProfile, ownProfile, concurrentMutualProfile] = await Promise.all([
     ensureProfile(testIds.mutual, 'Mutual Match Fixture'),
     ensureProfile(testIds.oneSided, 'One-sided Interest Fixture'),
     ensureProfile(testIds.alreadyPassed, 'Already Passed Fixture'),
     ensureProfile(testIds.passTarget, 'Pass Target Fixture'),
     ensureProfile(testIds.viewer, 'Demo User Fixture'),
+    ensureProfile(testIds.concurrentMutual, 'Concurrent Mutual Fixture'),
   ]);
-  profileIds = { mutualProfile, oneSidedProfile, alreadyPassedProfile, passProfile, ownProfile };
+  profileIds = { mutualProfile, oneSidedProfile, alreadyPassedProfile, passProfile, ownProfile, concurrentMutualProfile };
 
   await createIncomingLike(testIds.mutual, testIds.viewer);
   await createIncomingLike(testIds.oneSided, testIds.viewer);
+  await createIncomingLike(testIds.concurrentMutual, testIds.viewer);
   await prisma.swipe.create({
     data: { actorUserId: testIds.viewer, targetUserId: testIds.alreadyPassed, direction: 'PASS' },
   });
@@ -145,6 +148,36 @@ test('POST /swipe records LIKE and returns a match only after reciprocal LIKE', 
   assert.equal(await prisma.match.count({
     where: { OR: [{ userLowId: testIds.viewer }, { userHighId: testIds.viewer }] },
   }), 1);
+});
+
+test('concurrent identical LIKE requests converge on one persisted swipe and one mutual match', async () => {
+  const body = JSON.stringify({
+    profileId: profileIds.concurrentMutualProfile,
+    direction: 'LIKE',
+  });
+  const [firstResponse, secondResponse] = await Promise.all([
+    handlers.postSwipe(post(body)),
+    handlers.postSwipe(post(body)),
+  ]);
+  assert.equal(firstResponse.status, 200);
+  assert.equal(secondResponse.status, 200);
+  const [first, second] = await Promise.all([firstResponse.json(), secondResponse.json()]);
+  assert.equal(first.success, true);
+  assert.equal(second.success, true);
+  assert.equal(first.matched, true);
+  assert.equal(second.matched, true);
+  assert.equal(first.match.id, second.match.id, 'both callers must observe the canonical match');
+
+  const swipes = await prisma.swipe.findMany({
+    where: { actorUserId: testIds.viewer, targetUserId: testIds.concurrentMutual },
+  });
+  assert.equal(swipes.length, 1, 'duplicate requests must persist one directed decision');
+  const matches = await prisma.match.findMany({
+    where: { OR: [{ userLowId: testIds.viewer }, { userHighId: testIds.viewer }] },
+  });
+  assert.equal(matches.filter((item) => (
+    item.userLowId === testIds.concurrentMutual || item.userHighId === testIds.concurrentMutual
+  )).length, 1, 'the mutual pair must have one canonical match row');
 });
 
 test('GET /matches exposes confirmed mutual matches, never one-sided incoming interest', async () => {
