@@ -173,7 +173,7 @@ test('Unit of Work rolls back a swipe when the transaction callback fails', asyn
 });
 
 
-test('RecordSwipeUseCase creates one real SQLite Match only after reciprocal LIKE', async () => {
+test('RecordSwipeUseCase creates one real PostgreSQL Match only after reciprocal LIKE', async () => {
   const viewerId = asUserId(unique('mutual-viewer'));
   const targetId = asUserId(unique('mutual-target'));
   const targetProfileId = asProfileId(unique('mutual-profile'));
