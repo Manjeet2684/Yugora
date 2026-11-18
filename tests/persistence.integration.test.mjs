@@ -389,3 +389,39 @@ test('PostgreSQL trigger blocks direct invalid Match inserts and deletes stale m
   });
   assert.equal(await prisma.match.count({ where: { id: matchId } }), 0);
 });
+
+
+test('Unicode match participants use the same canonical byte order as PostgreSQL COLLATE C', async () => {
+  const privateUseId = asUserId('yugora-unicode-\uE000');
+  const supplementaryId = asUserId('yugora-unicode-😀');
+  await ensureUser(privateUseId);
+  await ensureUser(supplementaryId);
+
+  const swipeRepository = new PrismaSwipeRepository(prisma);
+  for (const [actorUserId, targetUserId] of [
+    [privateUseId, supplementaryId],
+    [supplementaryId, privateUseId],
+  ]) {
+    await swipeRepository.createIfAbsent(createSwipeDecision({
+      id: asSwipeId(unique('unicode-mutual-swipe')),
+      actorUserId,
+      targetUserId,
+      direction: 'LIKE',
+      createdAt: new Date(),
+    }));
+  }
+
+  const match = createMatch({
+    id: asMatchId(unique('unicode-match')),
+    participantA: supplementaryId,
+    participantB: privateUseId,
+    matchedAt: new Date(),
+  });
+  assert.equal(match.userLowId, privateUseId);
+  assert.equal(match.userHighId, supplementaryId);
+
+  const persisted = await new PrismaMatchRepository(prisma).createIfAbsent(match);
+  assert.equal(persisted.created, true);
+  assert.equal(persisted.match.userLowId, privateUseId);
+  assert.equal(persisted.match.userHighId, supplementaryId);
+});
