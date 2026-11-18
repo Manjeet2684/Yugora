@@ -232,9 +232,10 @@ function parseSwipeBody(text: string): SwipeRequestBody | Response {
   if (
     profileId.length === 0 ||
     profileId.length > 128 ||
-    /[\u0000-\u001f\u007f]/.test(profileId)
+    /[\u0000-\u001f\u007f]/.test(profileId) ||
+    hasUnpairedSurrogate(profileId)
   ) {
-    return errorResponse(400, "INVALID_REQUEST", "profileId must contain between 1 and 128 valid characters.");
+    return errorResponse(400, "INVALID_REQUEST", "profileId must contain between 1 and 128 valid Unicode characters.");
   }
   if (body.direction !== "LIKE" && body.direction !== "PASS") {
     return errorResponse(400, "INVALID_REQUEST", "direction must be exactly LIKE or PASS.");
