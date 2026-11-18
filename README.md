@@ -56,7 +56,7 @@ This is a standalone implementation of the Coy SDE Intern assignment. **Home is 
 |---|---|---|
 | **1 · Architecture** | Domain entities, policies, use cases, ports, API contracts, ADRs, architecture tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **2 · Persistence** | Prisma 7, PostgreSQL schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-SQLite HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
+| **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-PostgreSQL HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **5 · Quality** | Chromium browser journeys, keyboard/modal focus testing, responsive checks, failure recovery, baseline security headers and release-readiness review | <img alt="QA passed; release gated" src="https://img.shields.io/badge/QA%20passed-release%20gated-d69a32" /> |
 
@@ -74,7 +74,7 @@ The UI does not determine match eligibility, infer incoming interest, or keep sw
 
 ## Gate 5 — Browser QA and release boundary
 
-The Playwright suite launches the built Next.js production server and drives real Chromium pages. For deterministic user journeys it intercepts the browser's same-origin API calls; real database and HTTP correctness remain covered separately by the SQLite-backed integration suites. Browser coverage includes Pass, one-sided Like, server-confirmed mutual Match, reload/feed exclusion, empty feed, independent feed/swipe/matches failure recovery, broken-image fallback, keyboard shortcuts, native touchscreen drag in mobile emulation, dialog focus trapping and Escape dismissal, reduced motion, accessible button names, responsive overflow, and security headers.
+The Playwright suite launches the built Next.js production server and drives real Chromium pages. For deterministic user journeys it intercepts the browser's same-origin API calls; real database and HTTP correctness remain covered separately by the PostgreSQL-backed integration suites. Browser coverage includes Pass, one-sided Like, server-confirmed mutual Match, reload/feed exclusion, empty feed, independent feed/swipe/matches failure recovery, broken-image fallback, keyboard shortcuts, native touchscreen drag in mobile emulation, dialog focus trapping and Escape dismissal, reduced motion, accessible button names, responsive overflow, and security headers.
 
 The application now emits a baseline Content Security Policy and browser security headers. The policy allows the current Next.js inline runtime and the seeded profile image host, so it is a baseline rather than a strict nonce-based CSP. No HSTS header is sent before an HTTPS deployment exists. The API does not advertise CORS access to other origins; relative same-origin requests and JSON content-type validation are used by the client.
 
@@ -191,7 +191,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 ## Security review and Vercel readiness
 
-The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel storage assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The current SQLite adapter is suitable for local/CI assignment evaluation, not durable Vercel Function storage. A managed database migration and durable rate limiting are required before public deployment.
+The scoped senior engineering/security review, attack-case matrix, release blockers and Vercel storage assessment are documented in [SECURITY-REVIEW.md](docs/SECURITY-REVIEW.md). The feature branch replaces the file-backed adapter with PostgreSQL; this migration still requires a passing PostgreSQL CI run and a provisioned managed database before it can be called deployment-ready. Durable edge rate limiting must also be configured before public exposure.
 
 ## Technology choices
 
@@ -336,7 +336,7 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
 
 ## Quality gates
 
-Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
+Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the PostgreSQL migrations into an ephemeral CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
 
 The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
 
