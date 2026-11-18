@@ -70,6 +70,29 @@ async function openDiscover(page, options = {}) {
   return server;
 }
 
+test("real SQLite-backed browser journey persists a seeded mutual match across reload", async ({ page }) => {
+  // This test intentionally does not intercept /feed, /swipe or /matches.
+  // The seeded Riya profile has a directed incoming LIKE from its owner to demo-user.
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
+  await page.getByRole("button", { name: "Like this profile" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "It's a match." });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Matches" }).click();
+  await expect(page.getByRole("heading", { name: "Your matches." })).toBeVisible();
+  await expect(page.locator(".match-card")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
+});
+
 test("opens Discover with one profile card and accessible Like/Pass actions", async ({ page }) => {
   await openDiscover(page);
   await expect(page.locator(".profile-card")).toHaveCount(1);
@@ -178,7 +201,7 @@ test("real mobile touch drag follows the same swipe mutation", async ({ browser 
   }
 });
 
-test("a persisted server decision stays out of the feed after reload", async ({ page }) => {
+test("the API fixture excludes a server-confirmed decision from the next feed after reload", async ({ page }) => {
   await openDiscover(page);
   await page.getByRole("button", { name: "Pass on this profile" }).click();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();

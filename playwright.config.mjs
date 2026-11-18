@@ -24,7 +24,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      DATABASE_URL: "file:./prisma/yugora-e2e.db",
+      DATABASE_URL: process.env.DATABASE_URL ?? "file:./prisma/yugora-e2e.db",
       DEMO_USER_ID: "demo-user",
       NEXT_TELEMETRY_DISABLED: "1",
     },

@@ -60,7 +60,7 @@ This is a standalone implementation of the Coy SDE Intern assignment. **Home is 
 | **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **5 · Quality** | Chromium browser journeys, keyboard/modal focus testing, responsive checks, failure recovery, baseline security headers and release-readiness review | <img alt="QA passed; release gated" src="https://img.shields.io/badge/QA%20passed-release%20gated-d69a32" /> |
 
-Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures, alongside the real-SQLite architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
+Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures plus an unmocked SQLite-backed full-stack match/reload journey, alongside the real-SQLite architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
 
 
 ## Gate 4 — The YUGORA experience

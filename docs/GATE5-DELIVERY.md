@@ -4,17 +4,18 @@
 
 ## Browser test approach
 
-Playwright Test 1.65.1 drives Chromium against the built Next.js production server. Page-level API interception provides deterministic responses and failures for UI journeys; it does not replace the independent real-SQLite HTTP and persistence suites.
+Playwright Test 1.65.1 drives Chromium against the built Next.js production server. Most UI journeys use page-level API interception for deterministic response/failure coverage. One unmocked browser journey uses the same pre-seeded SQLite database as the deployed Next.js process, exercises the actual GET /feed → POST /swipe → GET /matches flow, reloads the page, and verifies that the profile is excluded and the mutual match persists. This complements the independent real-SQLite HTTP and persistence suites.
 
 ## Browser scenarios
 
+- An unmocked full-stack browser journey creates a mutual match for the seeded Riya profile, reloads, verifies it disappears from the feed, and retrieves the persisted match.
 - Discover renders one profile card with labelled Like and Pass controls.
 - Home remains blank; navigation switches back to Discover.
 - Pass and one-sided Like submit their correct profile/direction payloads.
 - Mutual Like opens the dialog only when the server returns a Match DTO; the Matches page renders that match.
 - Match dialog receives focus, traps keyboard focus, closes with Escape, and restores prior focus when it remains available.
 - Keyboard arrow keys and native Chromium touchscreen pointer events on a mobile-emulated devices submit the same swipe shape as action buttons.
-- Decisions are omitted by the fixture feed after reload; real persistence behavior remains covered by database/API suites.
+- Deterministic fixture-backed reload behaviour is covered separately from the unmocked SQLite-backed persistence journey.
 - Empty feed, broken image, feed error, swipe error and Matches error have independent retry/fallback tests.
 - Mobile navigation is visible, the desktop sidebar is hidden, the card remains in viewport and the page has no horizontal overflow at 390px.
 - Reduced-motion preference is respected and visible buttons have accessible names.
