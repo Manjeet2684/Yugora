@@ -1,6 +1,6 @@
 # YUGORA Quality and Regression Test Plan
 
-> The SQLite language below records the original Gate 2/3 test baseline. The current `feature/postgres-production-hardening` branch executes persistence, HTTP and browser integration against PostgreSQL 16. The earlier verified run [44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084) passed 65 tests, including the exact Vercel migration/seed/build command and 16 Chromium journeys. The latest additions test UTF-8 match ordering, emoji avatars and malformed surrogate request IDs; final CI is pending.
+> The SQLite language below records the original Gate 2/3 test baseline. The current `feature/postgres-production-hardening` branch executes persistence, HTTP and browser integration against PostgreSQL 16. The latest verified run [44398530835](https://github.com/Manjeet2684/Yugora/actions/runs/44398530835) passed 69 tests, including UTF-8 match ordering, emoji avatars, malformed surrogate request IDs, the exact Vercel migration/seed/build command and 16 Chromium journeys.
 
 ## Gate 1 — Architecture (in-memory adapters)
 
