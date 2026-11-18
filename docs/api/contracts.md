@@ -1,10 +1,12 @@
-# HTTP API Contract Baseline
+# YUGORA HTTP API
 
-The routes are implemented in Gate 3. This document fixes the intended contract before transport code is added.
+The Gate 3 API is implemented as Next.js App Router-compatible Route Handlers at the exact assignment paths. It uses the existing application use cases and the configured single demo user; the browser never chooses the acting user ID.
+
+All user-specific responses, including errors, use `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff`.
 
 ## GET `/feed`
 
-Returns active profiles that have not been swiped on by the server-configured demo user.
+Returns profiles eligible for the configured demo user:
 
 ```json
 {
@@ -22,11 +24,11 @@ Returns active profiles that have not been swiped on by the server-configured de
 }
 ```
 
-The response must not contain incoming-like flags, like counts, internal user IDs, swipe rows, or match eligibility hints.
+A profile is excluded only after the viewer has made a directed swipe on it. Incoming LIKEs do not remove a profile from the feed. The public DTO allow-list excludes user IDs, incoming-like flags/counts, Swipe rows, Match rows, and hidden-interest metadata.
 
 ## POST `/swipe`
 
-Request:
+Requires `Content-Type: application/json`. The request body is limited to 4 KiB and accepts exactly these fields:
 
 ```json
 {
@@ -35,7 +37,7 @@ Request:
 }
 ```
 
-`direction` is exactly `LIKE` or `PASS`. The browser must not send an actor user ID.
+`profileId` must be a non-empty string of at most 128 characters. `direction` is exactly `LIKE` or `PASS`. Unknown fields—including `actorUserId`—are rejected. The server resolves the acting user from `CurrentUserPort`.
 
 Successful non-match response:
 
@@ -48,42 +50,21 @@ Successful non-match response:
 }
 ```
 
-Successful mutual-match response:
-
-```json
-{
-  "success": true,
-  "matched": true,
-  "matchCreated": true,
-  "match": {
-    "id": "match_001",
-    "profile": {
-      "id": "profile_001",
-      "name": "Riya",
-      "age": 23,
-      "photoUrl": "/profiles/riya.jpg",
-      "bio": "Coffee lover and weekend explorer.",
-      "locationLabel": "Delhi",
-      "interests": ["Travel", "Photography", "Music"]
-    },
-    "matchedAt": "2026-11-18T12:00:00.000Z"
-  }
-}
-```
-
-An identical retry returns the current result but sets `matchCreated` to false if the Match already existed. A different direction for an already-recorded pair returns a conflict.
+Successful mutual-match response contains `matched: true` and the confirmed match DTO. An identical retry is idempotent; `matchCreated` is false when the Match already existed. An opposite decision for an already-recorded directed pair returns 409.
 
 ## GET `/matches`
 
-Returns persisted mutual matches for the configured demo user only.
+Returns persisted mutual matches for the configured demo user only:
 
 ```json
-{
-  "matches": []
-}
+{ "matches": [] }
 ```
 
+A one-sided incoming LIKE is never returned as a Match.
+
 ## Error envelope
+
+All errors use this stable shape:
 
 ```json
 {
@@ -96,14 +77,18 @@ Returns persisted mutual matches for the configured demo user only.
 }
 ```
 
-Expected status mapping:
-
-| Status | Meaning | Example |
+| Status | Meaning | Example code |
 |---:|---|---|
-| 400 | Invalid request | Invalid direction or malformed body |
-| 404 | Target unavailable | Profile not found or inactive |
-| 409 | Decision conflict | Opposite swipe already exists |
-| 500 | Unexpected failure | Unhandled application error |
-| 503 | Temporary service failure | Database unavailable |
+| 400 | Invalid request or malformed JSON | `INVALID_REQUEST`, `INVALID_JSON` |
+| 404 | Target profile unavailable | `PROFILE_NOT_FOUND` |
+| 409 | Conflicting prior decision | `SWIPE_CONFLICT` |
+| 413 | Request body exceeds 4 KiB | `PAYLOAD_TOO_LARGE` |
+| 415 | Unsupported content type | `UNSUPPORTED_MEDIA_TYPE` |
+| 500 | Unexpected server/invariant failure | `INTERNAL_SERVER_ERROR` |
+| 503 | Recognized transient database/adapter outage | `SERVICE_UNAVAILABLE` |
 
-Private/user-specific responses must not be shared-cached. Route handlers must serialize DTOs, not ORM entities.
+Unexpected error details, SQL, adapter messages, stack traces and filesystem paths are never returned to clients.
+
+## Assignment identity model
+
+The assignment explicitly says no external auth is needed and assumes one logged-in user. Gate 3 therefore retains the documented `DEMO_USER_ID` server-side adapter. This is an assignment/demo identity boundary, not production multi-user authentication. The API does not accept an actor ID from the browser.

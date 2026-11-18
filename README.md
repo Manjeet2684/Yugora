@@ -56,11 +56,11 @@ This is a standalone implementation of the Coy SDE Intern assignment. It has a b
 |---|---|---|
 | **1 · Architecture** | Domain entities, policies, use cases, ports, API contracts, ADRs, architecture tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **2 · Persistence** | Prisma 7, SQLite schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **3 · Backend** | `GET /feed`, `POST /swipe`, `GET /matches`, validation, error mapping, HTTP integration/privacy tests | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
+| **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-SQLite HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **4 · Frontend** | Mobile-first Discover, drag gestures, Like/Pass controls, match moment, Matches view, empty/error states | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 | **5 · Quality** | E2E, concurrency/privacy regression, responsive and accessibility verification, final demo docs | <img alt="Planned" src="https://img.shields.io/badge/planned-64748b" /> |
 
-Gates 1 and 2 are complete and committed. The domain/application layer and Prisma/SQLite persistence are covered by automated tests. HTTP routes and the visual app are later gates, not represented as finished here.
+Gates 1, 2 and 3 are complete and committed. Domain/application logic, Prisma/SQLite persistence, and the three required HTTP operations are covered by automated tests. The frontend remains Gate 4.
 
 ## System architecture
 
@@ -217,7 +217,7 @@ The seed command is designed to be repeatable. It creates 30 fictional profiles 
 
 ## API behaviour and privacy contract
 
-The application-layer contracts already define the three operations; HTTP Route Handlers are Gate 3. The persistence layer must support the following behaviour:
+The Gate 3 Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite; the Next.js web runtime and visual shell are introduced in Gate 4. The persistence layer must support the following behaviour:
 
 - `GET /feed` excludes all profiles previously swiped on by the demo user, whether the decision was LIKE or PASS.
 - A profile's incoming LIKE does not remove it from the demo user's feed and is not serialized in the profile DTO.
@@ -232,6 +232,10 @@ The application-layer contracts already define the three operations; HTTP Route 
 
   ```text
   Yugora/
+  ├── app/                         # Root-path Next.js API Route Handlers
+  │   ├── feed/route.ts            # GET /feed
+  │   ├── swipe/route.ts           # POST /swipe
+  │   └── matches/route.ts         # GET /matches
   ├── prisma/
   │   ├── migrations/                 # Versioned SQLite DDL
   │   ├── schema.prisma               # Six normalized models
@@ -242,11 +246,15 @@ The application-layer contracts already define the three operations; HTTP Route 
   │   │   ├── application/             # Ports, use cases, DTOs and errors
   │   │   └── infrastructure/
   │   │       └── persistence/prisma/  # Profile, Swipe, Match, Unit of Work adapters
-  │   ├── infrastructure/database/     # Prisma client and demo-user adapter
+  │   ├── modules/discovery/http/      # Transport validation and error mapping
+  │   └── infrastructure/
+  │       ├── database/                # Prisma client and demo-user adapter
+  │       └── http/                    # Warm-process route application singleton
   │   └── shared/contracts/            # Transport-neutral API contracts
   ├── tests/
   │   ├── architecture.test.mjs       # In-memory core tests
-  │   └── persistence.integration.test.mjs
+  │   ├── persistence.integration.test.mjs
+  │   └── http.integration.test.mjs   # Real-SQLite HTTP adapter tests
   ├── docs/
   │   ├── assets/                     # README visuals, ERD and architecture
   │   ├── diagrams/                   # Editable Mermaid diagram source
@@ -269,6 +277,8 @@ The application-layer contracts already define the three operations; HTTP Route 
 - [Initial migration](prisma/migrations/20261118000000_init/migration.sql)
 - [Mutual-match integrity migration](prisma/migrations/20261118010000_enforce_mutual_match_integrity/migration.sql)
 - [Match invariant error](src/modules/discovery/application/errors/application-errors.ts)
+- [HTTP route adapter](src/modules/discovery/http/discovery-route-handlers.ts)
+- [GET /feed](app/feed/route.ts) · [POST /swipe](app/swipe/route.ts) · [GET /matches](app/matches/route.ts)
 - [ADR-004: mutual-match persistence invariant](docs/architecture/decisions/ADR-004-mutual-match-database-invariant.md)
 - [Deterministic seed](prisma/seed.ts)
 
@@ -276,7 +286,7 @@ The application-layer contracts already define the three operations; HTTP Route 
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. CI installs from the committed npm lockfile and runs `npm audit --audit-level=high` before tests. HTTP and browser acceptance tests are added in their respective gates.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. CI installs from the committed npm lockfile and runs `npm audit --audit-level=high` before tests. HTTP handlers are covered by a real-SQLite integration suite in Gate 3. Browser acceptance tests are added in Gates 4–5.
 
 ## Copyright and attribution
 

@@ -1,55 +1,42 @@
-# Gate 1 Architecture Test Plan
+# YUGORA Quality and Regression Test Plan
 
-These tests exercise domain and application behavior through in-memory adapters. They are not substitutes for Gate 2 SQLite tests or Gate 3 HTTP integration tests.
+## Gate 1 — Architecture (in-memory adapters)
 
-| Test | Expected assertion |
-|---|---|
-| Mutual LIKE | Reciprocal LIKE decisions satisfy the matching policy |
-| Missing reciprocal | No match |
-| Reciprocal PASS | No match |
-| Wrong actor/target pair | No match |
-| Feed with incoming LIKE | Profile stays eligible |
-| Feed with viewer PASS | Profile is excluded |
-| DTO allow-list | Internal/private properties do not serialize |
-| LIKE with reciprocal | Exactly one match result is returned |
-| LIKE without reciprocal | Decision only; no Match |
-| PASS with incoming LIKE | Decision only; no Match |
-| Identical retry | No duplicate Swipe or Match |
-| Opposite retry | `SWIPE_CONFLICT` |
-| Match query | Only stored match rows for the current user are returned |
-| Match canonicalization | Participant ordering is stable |
-| Transaction failure | Newly inserted Swipe rolls back if match persistence fails |
-| Self swipe | Rejected before persistence |
-| Invalid direction | Rejected before persistence |
+- Reciprocal LIKE is required for matching.
+- Incoming LIKE does not remove a profile from the viewer's feed.
+- A viewer-authored LIKE or PASS removes that target from future feed results.
+- Public DTO projection excludes internal persistence fields and incoming-interest metadata.
+- Same-direction retries are idempotent; opposite decisions conflict.
+- Failed match persistence rolls back the swipe.
+- Self-swipes and invalid directions are rejected.
 
-## Later-gate test obligations
+## Gate 2 — Persistence (real SQLite)
 
-### Gate 2
+- Migrations deploy to a fresh SQLite database.
+- Seed is repeatable and creates exactly 30 profiles plus at least eight incoming likes.
+- Foreign keys, unique indexes and CHECK constraints are enforced.
+- Unit of Work rollback is verified against SQLite.
+- Repository refuses a Match without two persisted reciprocal LIKEs.
+- SQLite triggers reject invalid Match inserts/participant updates.
+- Persisted Swipe decisions are immutable; removing a supporting LIKE removes its Match.
 
-- Run migrations against a fresh SQLite database.
-- Verify foreign keys, unique indexes, and CHECK constraints.
-- Run the seed script twice and prove it is idempotent.
-- Verify the minimum profile count and known incoming-like demo scenarios.
+## Gate 3 — HTTP API (real SQLite behind route adapter)
 
-### Gate 3
+- `GET /feed` returns only public profiles, excludes previously swiped targets and does not expose incoming likes.
+- `POST /swipe` records LIKE/PASS, resolves mutual matches from persisted state and returns stable response DTOs.
+- `GET /matches` returns confirmed mutual matches only.
+- Repeated identical POSTs are idempotent; an opposite decision returns 409.
+- Invalid JSON, wrong content type, oversized bodies, unknown keys, caller-supplied actor IDs, invalid directions and self-swipes are rejected.
+- Unknown/inactive profile is 404; transient database unavailability maps to 503.
+- Unexpected errors return generic messages without stack traces, SQL, adapter details or paths.
+- Success and error responses are private/no-store and include `X-Content-Type-Options: nosniff`.
+- All required routes are exposed at the exact root paths `/feed`, `/swipe`, and `/matches`.
 
-- Test all required route methods and status codes.
-- Test malformed JSON, missing fields, unknown profile IDs, invalid direction, and conflicts.
-- Verify transaction rollback against SQLite.
-- Verify feed and match responses contain no non-mutual incoming interest.
-- Verify concurrent identical swipes do not create duplicate records.
+## Gate 4/5 — Browser and release
 
-### Gate 4/5
-
-- Playwright journeys for pass, like, mutual match, reload, empty feed, and request failure.
-- Mobile drag and desktop button paths must use the same mutation.
-- Reduced-motion and keyboard controls must remain functional.
-- Simulate image, feed, swipe, and matches failures independently.
-
-
-## Gate 2 mutual-match integrity regression coverage
-
-- Repository refuses match creation without two persisted reciprocal LIKE decisions.
-- SQLite triggers reject direct invalid Match inserts and invalid participant updates.
-- Persisted Swipe actor/target/direction fields cannot be mutated.
-- Removing a supporting Swipe removes the associated Match.
+- Playwright journeys for pass, like, mutual match, reload, empty feed and request failure.
+- Mobile drag and desktop button paths use the same mutation.
+- Reduced-motion and keyboard controls remain functional.
+- Simulate image, feed, swipe and matches failures independently.
+- Verify responsive layouts and accessibility.
+- Review deployment-specific security headers, origin policy and platform rate limits before public release.
