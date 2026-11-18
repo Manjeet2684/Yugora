@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "build:architecture": "tsc",
     "test:architecture": "npm run build:architecture && node --test tests/architecture.test.mjs",
-    "test:configuration": "node --import tsx --test tests/configuration.test.ts",
+    "test:configuration": "node --import tsx --test tests/configuration.test.ts tests/profile-placeholder-photo.test.ts",
     "test:persistence": "npm run db:deploy && npm run db:seed && npm run db:seed && node --test tests/persistence.integration.test.mjs",
     "check": "npm run db:validate && npm run typecheck && npm run test:configuration && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui && npm run test:copyright",
     "db:generate": "prisma generate",
