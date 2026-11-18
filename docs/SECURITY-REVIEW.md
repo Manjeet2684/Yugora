@@ -43,9 +43,9 @@ The implementation covers the assignment's single assumed demo user and intentio
 - The feed excludes profiles the viewer has already decided on, but does not exclude or label profiles that have only liked the viewer.
 - Public profile and match DTOs are explicit allow-lists; internal owner and swipe identifiers are not projected to the browser.
 - A match is created only after both directed LIKE decisions exist. The repository checks both persisted rows, database triggers reject an invalid match, swipe decisions are immutable, and a supporting swipe deletion removes the pair's match.
-- PostgreSQL pair-level advisory locking addresses simultaneous reciprocal-LIKE requests. Unique constraints and idempotent upserts prevent duplicate directed decisions and duplicate matches.
+- PostgreSQL pair-level advisory locking addresses simultaneous reciprocal-LIKE requests. Pair canonicalization uses UTF-8 byte ordering to match PostgreSQL bytewise `COLLATE C`, and the lock uses the same canonical pair. Unique constraints and idempotent upserts prevent duplicate directed decisions and duplicate matches.
 - Prisma operations use the generated client. The transaction lock uses a parameterized tagged raw query; no user-controlled SQL string is concatenated.
-- Seeded avatar assets are self-contained SVG data URLs, rather than requests to a third-party photo host. This avoids sending demo visitors' IP/network metadata to that image provider. The CSP no longer permits that host.
+- Seeded avatar assets are self-contained SVG data URLs, rather than requests to a third-party photo host. This avoids sending demo visitors' IP/network metadata to that image provider. The generator and UI initials fallback use Unicode code points, not split UTF-16 surrogate halves; the CSP no longer permits that host.
 - Next.js sends CSP, anti-framing, MIME-sniffing, referrer, permissions and cross-origin isolation/resource headers. The CSP still permits `'unsafe-inline'` for Next.js compatibility; it is a baseline, not a strict nonce/hash CSP.
 
 ## Infrastructure state verified
@@ -94,7 +94,7 @@ A custom firewall configuration is enabled and read back as active/valid. It con
 - Match: `GET /feed`, `POST /swipe`, and `GET /matches`
 - Key: source IP
 - Algorithm: fixed window
-- Threshold: 20 requests per IP per 60 seconds across the matched API rule
+- Threshold: 60 requests per IP per 60 seconds across the matched API rule
 - Mitigation: rate limit
 
 The rule is valid and active in Vercel and protects all three assignment API routes. Its actual HTTP 429 behavior cannot be tested until a deployment exists.
