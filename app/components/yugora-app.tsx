@@ -71,7 +71,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function ProfileImage({ profile, className = "" }: { profile: Pick<PublicProfileDto, "name" | "photoUrl">; className?: string }) {
   const [failed, setFailed] = useState(false);
-  const initial = profile.name.trim().charAt(0).toUpperCase() || "Y";
+  const initial = Array.from(profile.name.trim())[0]?.toLocaleUpperCase("en-US") || "Y";
   return (
     <div className={`profile-image ${className}`}>
       <div className="profile-image-fallback" aria-hidden="true">{initial}</div>
