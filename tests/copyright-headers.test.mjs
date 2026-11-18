@@ -9,7 +9,7 @@ const ROOT = process.cwd();
 const SOURCE_EXTENSIONS = new Set([
   ".ts", ".tsx", ".mjs", ".sql", ".css", ".svg", ".mmd", ".yml", ".yaml", ".prisma",
 ]);
-const SCAN_ROOTS = ["app", "src", "prisma", "tests", "docs", ".github"];
+const SCAN_ROOTS = ["app", "src", "prisma", "tests", "scripts", "docs", ".github"];
 const EXPLICIT_ROOT_FILES = [".env.example", "next.config.ts", "playwright.config.mjs", "prisma.config.ts"];
 
 async function collectSourceFiles(relativeDirectory) {
