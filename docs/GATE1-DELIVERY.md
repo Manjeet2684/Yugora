@@ -1,5 +1,7 @@
 # YUGORA — Gate 1 Delivery Report
 
+> Historical milestone report: this describes the architecture-only Gate 1 scope before the later SQLite implementation and the current PostgreSQL hardening branch. References below to deferred SQLite persistence are historical, not the current database selection.
+
 **Status: Complete and published to the YUGORA GitHub repository.**
 
 ## Included
