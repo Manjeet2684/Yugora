@@ -9,6 +9,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+    // CI and deployed environments must provide their own managed PostgreSQL URL.
+    // This local fallback is only a harmless schema-validation default.
+    url: process.env.DATABASE_URL ?? "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public",
   },
 });
