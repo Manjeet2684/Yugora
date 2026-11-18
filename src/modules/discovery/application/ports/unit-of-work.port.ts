@@ -7,6 +7,12 @@ export interface DiscoveryTransactionRepositories {
   readonly profiles: ProfileRepositoryPort;
   readonly swipes: SwipeRepositoryPort;
   readonly matches: MatchRepositoryPort;
+  /**
+   * Serialize decisions for the same unordered user pair within this transaction.
+   * The adapter must release the lock automatically on commit or rollback.
+   */
+  lockPair(firstUserId: import("../../domain/values/identifiers.js").UserId,
+    secondUserId: import("../../domain/values/identifiers.js").UserId): Promise<void>;
 }
 
 /** Executes all callback operations in one atomic persistence transaction. */
