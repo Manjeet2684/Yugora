@@ -39,7 +39,7 @@ The architecture tests use in-memory test adapters. They verify core use-case be
 - Next.js pages and React components.
 - Motion-based swipe UI and match animations.
 - Prisma schema, SQLite migrations, and persistence adapters.
-- 30–40 profile seed data and seeded incoming LIKE rows.
+- 30+ mock profile seed data and seeded incoming LIKE rows.
 - HTTP Route Handlers and HTTP error mapping.
 - Playwright browser tests, responsive QA, and accessibility verification.
 

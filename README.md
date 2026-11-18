@@ -178,7 +178,7 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 
 ## Getting started
 
-**Requirements:** Node.js 22 and npm. The current-user adapter follows the assignment's explicit assumption of one already-logged-in demo user and no external authentication; it is not production authentication. `better-sqlite3` uses a native Node add-on; use a supported Node version for your platform.
+**Requirements:** Node.js 22.12+ and npm. The current-user adapter follows the assignment's explicit assumption of one already-logged-in demo user and no external authentication; it is not production authentication. `better-sqlite3` uses a native Node add-on; use a supported Node version for your platform.
 
 ```bash
 # 1. Clone the repository
@@ -189,7 +189,7 @@ cd Yugora
 cp .env.example .env
 
 # 3. Install packages and generate the Prisma Client
-npm install
+npm ci
 
 # 4. Apply the committed migration and seed the demo data
 npm run db:deploy
@@ -276,7 +276,7 @@ The application-layer contracts already define the three operations; HTTP Route 
 
 Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. HTTP and browser acceptance tests are added in their respective gates.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. It includes checks that direct invalid Match inserts are rejected and that deleting a supporting LIKE removes the Match. CI installs from the committed npm lockfile and runs `npm audit --audit-level=high` before tests. HTTP and browser acceptance tests are added in their respective gates.
 
 ## Copyright and attribution
 
