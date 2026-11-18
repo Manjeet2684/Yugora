@@ -4,7 +4,7 @@
   <a href="https://github.com/Manjeet2684/Yugora/actions/workflows/architecture-check.yml"><img alt="Quality gates" src="https://github.com/Manjeet2684/Yugora/actions/workflows/architecture-check.yml/badge.svg" /></a>
   <img alt="Node.js 22" src="https://img.shields.io/badge/Node.js-22-356f43?logo=nodedotjs&logoColor=white" />
   <img alt="Prisma 7" src="https://img.shields.io/badge/Prisma-7.10.1-2d3748?logo=prisma&logoColor=white" />
-  <img alt="SQLite" src="https://img.shields.io/badge/Database-SQLite-07405e?logo=sqlite&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/Database-PostgreSQL-4169e1?logo=postgresql&logoColor=white" />
   <img alt="Copyright all rights reserved" src="https://img.shields.io/badge/Project%20license-All%20rights%20reserved-8b5e3c" />
 </div>
 
@@ -55,12 +55,12 @@ This is a standalone implementation of the Coy SDE Intern assignment. **Home is 
 | Gate | Deliverable | Status |
 |---|---|---|
 | **1 · Architecture** | Domain entities, policies, use cases, ports, API contracts, ADRs, architecture tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
-| **2 · Persistence** | Prisma 7, SQLite schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
+| **2 · Persistence** | Prisma 7, PostgreSQL schema/migrations, repositories, transactional Unit of Work, 30 profiles, 8 incoming demo likes, mutual-match database triggers, real-database tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **3 · Backend** | Root-path Next.js Route Handlers, strict JSON validation, safe error mapping, private/no-store responses, real-SQLite HTTP integration tests | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **4 · Frontend** | Mobile-first Discover, pointer/touch swipe gestures, desktop Like/Pass controls, server-confirmed match celebration, Matches view and responsive states | <img alt="Complete" src="https://img.shields.io/badge/complete-1b7a52" /> |
 | **5 · Quality** | Chromium browser journeys, keyboard/modal focus testing, responsive checks, failure recovery, baseline security headers and release-readiness review | <img alt="QA passed; release gated" src="https://img.shields.io/badge/QA%20passed-release%20gated-d69a32" /> |
 
-Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures plus an unmocked SQLite-backed full-stack match/reload journey, alongside the real-SQLite architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
+Gates 1–5 quality checks are implemented and CI-verified. Chromium browser journeys now exercise the production Next.js server with deterministic API fixtures plus an unmocked PostgreSQL-backed full-stack match/reload journey, alongside the real-PostgreSQL architecture, persistence and HTTP suites. **Public release is still gated**: the assignment intentionally uses one shared demo identity, and production authentication/identity, platform rate limiting, HTTPS deployment settings and operational monitoring have not been provisioned.
 
 
 ## Gate 4 — The YUGORA experience
@@ -69,7 +69,7 @@ The app opens directly into **Discover**. The Home tab is deliberately blank to 
 
 The client uses the same `POST /swipe` operation for drag gestures and desktop buttons. A card animates away only after the API confirms the decision; on request failure it stays visible and the user can retry. A match celebration is shown only after the server returns a confirmed Match DTO. Feed, swipe and matches failures each have explicit recovery states. The interface respects `prefers-reduced-motion` and exposes labelled controls and live status feedback.
 
-The UI does not determine match eligibility, infer incoming interest, or keep swipe decisions as its source of truth. A reload fetches the authoritative feed and matches from SQLite-backed APIs.
+The UI does not determine match eligibility, infer incoming interest, or keep swipe decisions as its source of truth. A reload fetches the authoritative feed and matches from PostgreSQL-backed APIs.
 
 
 ## Gate 5 — Browser QA and release boundary
@@ -87,7 +87,7 @@ Two preliminary Coy feature recommendations and their privacy guardrails are rec
 
 ## System architecture
 
-<img src="docs/assets/architecture.svg" alt="YUGORA hexagonal architecture from inbound adapters through application and domain contracts to Prisma repositories and SQLite" width="100%" />
+<img src="docs/assets/architecture.svg" alt="YUGORA hexagonal architecture from inbound adapters through application and domain contracts to Prisma repositories and PostgreSQL" width="100%" />
 
 YUGORA follows **Hexagonal Architecture (Ports and Adapters)**. The domain owns the matching rule. The application layer coordinates use cases. Infrastructure implements outbound ports. Database, HTTP, and UI details do not become business logic.
 
@@ -101,7 +101,7 @@ YUGORA follows **Hexagonal Architecture (Ports and Adapters)**. The domain owns 
     APP --> DOMAIN[Domain Entities & Policies<br/>Gate 1]
     APP --> PORTS[Outbound Repository Ports<br/>Gate 1]
     PORTS -. implemented by .-> ADAPTERS[Prisma Repositories<br/>Gate 2]
-    ADAPTERS --> DB[(SQLite)]
+    ADAPTERS --> DB[(PostgreSQL)]
   ```
   Editable source: [`docs/diagrams/architecture.mmd`](docs/diagrams/architecture.mmd).
 </details>
@@ -175,18 +175,18 @@ Every decision is stored exactly once as a directed Swipe. An incoming LIKE for 
 | Integrity rule | Enforcement |
 |---|---|
 | One decision per directed pair | `UNIQUE(actorUserId, targetUserId)` |
-| No self-swipe | SQLite `CHECK(actorUserId <> targetUserId)` |
-| Only `LIKE` or `PASS` | SQLite `CHECK(direction IN ('LIKE', 'PASS'))` |
-| Adult-only mock profiles | SQLite `CHECK(age >= 18)` |
+| No self-swipe | PostgreSQL `CHECK(actorUserId <> targetUserId)` |
+| Only `LIKE` or `PASS` | PostgreSQL `CHECK(direction IN ('LIKE', 'PASS'))` |
+| Adult-only mock profiles | PostgreSQL `CHECK(age >= 18)` |
 | One profile per owner | `UNIQUE(Profile.ownerUserId)` |
 | One match per unordered pair | Canonical pair + unique `(userLowId, userHighId)` |
-| Canonical match order | SQLite `CHECK(userLowId < userHighId)` |
-| Match requires two reciprocal LIKEs | Repository guard + SQLite insert/update triggers |
-| Persisted Swipe decision cannot be changed | SQLite immutability trigger |
-| Removing a supporting Swipe cannot leave a stale Match | SQLite delete trigger removes that pair's Match |
+| Canonical match order | PostgreSQL `CHECK(userLowId COLLATE "C" < userHighId COLLATE "C")` |
+| Match requires two reciprocal LIKEs | Repository guard + PostgreSQL insert/update triggers |
+| Persisted Swipe decision cannot be changed | PostgreSQL immutability trigger |
+| Removing a supporting Swipe cannot leave a stale Match | PostgreSQL delete trigger removes that pair's Match |
 | Profile-interest many-to-many | Composite primary key `(profileId, interestId)` |
 
-> SQLite CHECK predicates are authored in the SQL migration because arbitrary CHECK constraints are not represented in the Prisma schema DSL. Preserve these constraints when evolving migrations. See [`docs/architecture/data-model.md`](docs/architecture/data-model.md).
+> PostgreSQL CHECK constraints and PL/pgSQL triggers are authored in committed SQL migrations. Preserve these database-level invariants when evolving the schema. See [`docs/architecture/data-model.md`](docs/architecture/data-model.md).
 
 
 ## Security review and Vercel readiness
@@ -201,21 +201,23 @@ The scoped senior engineering/security review, attack-case matrix, release block
 | UI runtime | React 19.3.1 | Discover, Matches and swipe interaction state |
 | Language | TypeScript, Node.js 22 | Strict types and runtime |
 | ORM | Prisma ORM 7.10.1 | Typed data access and migrations |
-| Database | SQLite | Durable local source of truth |
-| SQLite driver | `better-sqlite3` via Prisma adapter | SQLite connection and transactions |
+| Database | PostgreSQL | Managed, durable source of truth |
+| PostgreSQL driver | `@prisma/adapter-pg` | PostgreSQL connection pooling and transactions |
 | Tests | Node test runner | Domain, application, persistence integration |
 | Architecture | Hexagonal / Ports and Adapters | Framework-independent core |
 
 ## Getting started
 
-**Requirements:** Node.js 22.12+ and npm. The current-user adapter follows the assignment's explicit assumption of one already-logged-in demo user and no external authentication; it is not production authentication. `better-sqlite3` uses a native Node add-on; use a supported Node version for your platform.
+**Requirements:** Node.js 22.12+, npm, and a PostgreSQL 16+ database. Set `DATABASE_URL` to the application's pooled PostgreSQL connection string when the provider supplies one, and `DIRECT_URL` to a direct connection for migrations. In local development, both can point at the same PostgreSQL database. The current-user adapter still follows the assignment's single-demo-user assumption; it is not production authentication.
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Manjeet2684/Yugora.git
 cd Yugora
 
-# 2. Configure the local database and demo identity
+# 2. Start PostgreSQL and configure both URLs in .env
+# DATABASE_URL is for the app (use a pooled URL when your provider supplies one).
+# DIRECT_URL is for Prisma migrations (use the provider's direct/non-pooled URL).
 cp .env.example .env
 
 # 3. Install packages and generate the Prisma Client
@@ -225,7 +227,7 @@ npm ci
 npm run db:deploy
 npm run db:seed
 
-# 5. Run schema, type, architecture and real-SQLite checks
+# 5. Run schema, type, architecture and real-PostgreSQL checks
 npm run check
 
 # 6. Start the Next.js service locally
@@ -248,14 +250,18 @@ The seed command is designed to be repeatable. It creates 30 fictional profiles 
 
 `db:reset` is destructive. It should only be run against a disposable local assignment database.
 
+### Database connection configuration
+
+The app uses `@prisma/adapter-pg` and must receive a PostgreSQL connection URL at runtime. For serverless production, prefer the provider's pooled connection URL for `DATABASE_URL`; set `DIRECT_URL` to the provider's direct URL for Prisma migration commands. The GitHub Actions workflow runs against a disposable PostgreSQL 16 service and validates both migrations and application transactions. Never commit real credentials or put a database URL in a `NEXT_PUBLIC_*` variable.
+
 ## API behaviour and privacy contract
 
-The Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against real SQLite. The interactive Discover and Matches UI is implemented in Gate 4 and browser-tested in Gate 5. The persistence layer must support the following behaviour:
+The Next.js App Router-compatible Route Handlers are implemented at `app/feed/route.ts`, `app/swipe/route.ts`, and `app/matches/route.ts`. The transport adapter is framework-independent and is tested directly against PostgreSQL. The interactive Discover and Matches UI is implemented in Gate 4 and browser-tested in Gate 5. The persistence layer must support the following behaviour:
 
 - `GET /feed` excludes all profiles previously swiped on by the demo user, whether the decision was LIKE or PASS.
 - A profile's incoming LIKE does not remove it from the demo user's feed and is not serialized in the profile DTO.
 - `POST /swipe` is idempotent for the same directed decision and rejects an incompatible second decision.
-- A match is inserted only when two reciprocal LIKE decisions exist. The repository checks both rows and SQLite triggers independently reject invalid matches.
+- A match is inserted only when two reciprocal LIKE decisions exist. The repository checks both rows and PostgreSQL triggers independently reject invalid matches.
 - `GET /matches` reads the persisted Match table only; no match is inferred from one-sided interest.
 
 ## Codebase map
@@ -274,7 +280,7 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
   │   ├── page.tsx                 # Minimal service landing page
   │   └── globals.css              # Service shell styles
   ├── prisma/
-  │   ├── migrations/                 # Versioned SQLite DDL
+  │   ├── migrations/                 # Versioned PostgreSQL DDL
   │   ├── schema.prisma               # Six normalized models
   │   └── seed.ts                     # 30 fictional profiles + incoming likes
   ├── src/
@@ -289,14 +295,14 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
   │       ├── database/                # Prisma client and demo-user adapter
   │       └── http/                    # Warm-process route application singleton
   │   └── shared/contracts/            # Transport-neutral API contracts
-  ├── next.config.ts               # Security headers and native SQLite adapter externalization
+  ├── next.config.ts               # Security headers and PostgreSQL driver externalization
   ├── playwright.config.mjs        # Production-server browser testing
   ├── tests/
   │   ├── copyright-headers.test.mjs
   │   ├── e2e/yugora.spec.mjs
   │   ├── architecture.test.mjs       # In-memory core tests
   │   ├── persistence.integration.test.mjs
-  │   ├── http.integration.test.mjs   # Real-SQLite HTTP adapter tests
+  │   ├── http.integration.test.mjs   # Real-PostgreSQL HTTP adapter tests
   │   └── ui-logic.test.mjs           # Gesture thresholds and bounded tilt
   ├── docs/
   │   ├── assets/                     # README visuals, ERD and architecture
@@ -330,9 +336,9 @@ The Next.js App Router-compatible Route Handlers are implemented at `app/feed/ro
 
 ## Quality gates
 
-Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-database adapter tests.
+Every push and pull request runs the GitHub Actions workflow. It validates the Prisma schema, type-checks the code, runs the Gate 1 architecture suite, deploys the SQLite migration into an ephemeral CI database, runs the seed twice, and executes real-PostgreSQL adapter tests.
 
-The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real SQLite file through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-SQLite HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. One browser journey is unmocked and verifies a mutual match persists across a real SQLite-backed page reload.
+The architecture suite uses in-memory fakes to verify business rules. The persistence suite uses a real PostgreSQL database through Prisma to verify repository queries, uniqueness/upsert behaviour, feed privacy, transaction rollback, and mutual-match triggers. CI runs `npm audit --audit-level=high`, the real-PostgreSQL HTTP suite, browser logic tests, a source-copyright guard, and 16 Chromium browser journeys against the production server. One browser journey is unmocked and verifies a mutual match persists across a real PostgreSQL-backed page reload.
 
 ## Copyright and attribution
 
