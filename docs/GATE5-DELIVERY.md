@@ -2,20 +2,20 @@
 
 ## Latest complete verification
 
-The current PostgreSQL hardening branch adds UTF-8 canonical match ordering, consistent advisory-lock keys, Unicode-safe avatar initials and rejection of malformed UTF-16 surrogate identifiers. The corresponding full CI run is pending; the previously completed [run 44394511084](https://github.com/Manjeet2684/Yugora/actions/runs/44394511084) passed 65 checks before these additional regressions.
+The current PostgreSQL hardening branch passed [GitHub Actions run 44398530835](https://github.com/Manjeet2684/Yugora/actions/runs/44398530835) on commit `8791a8a154b024fcf6faa0dc6c8f25b53e82b457`.
 
 | Suite | Tests passed |
 |---|---:|
-| Migration URL and local avatar configuration | 8 (latest CI pending) |
-| Architecture | 15 (latest CI pending) |
-| PostgreSQL persistence | 12 (latest CI pending) |
-| HTTP integration | 11 (latest CI pending) |
+| Migration URL and local avatar configuration | 8 |
+| Architecture | 15 |
+| PostgreSQL persistence | 12 |
+| HTTP integration | 11 |
 | UI gesture logic | 5 |
 | Copyright checks | 2 |
 | Chromium browser journeys | 16 |
-| **Total** | **69 expected; latest CI pending** |
+| **Total** | **69** |
 
-The earlier complete run passed PostgreSQL 16 migrations and repeatable seeding, Prisma schema validation, TypeScript checks, the exact Vercel migration/seed/build command, Next.js production build and `npm audit --audit-level=high` (0 vulnerabilities reported). The additional Unicode and malformed-surrogate tests must pass in the latest run before updating the final total.
+The run passed PostgreSQL 16 migrations and repeatable seeding, Prisma schema validation, TypeScript checks, the exact Vercel migration/seed/build command, Next.js production build and `npm audit --audit-level=high` (0 vulnerabilities reported).
 
 ## Browser and API scenarios
 
