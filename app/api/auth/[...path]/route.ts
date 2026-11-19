@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 // First-party proxy: keeps the Neon Auth session cookie on the YUGORA origin.
-import { isPublicDemoMode } from "../../../../src/infrastructure/auth/demo-mode.js";
+import { isLocalOrTestDemoMode, isPublicDemoMode } from "../../../../src/infrastructure/auth/demo-mode.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,10 +13,6 @@ const ALLOWED_PATHS = new Set([
   "email-otp/send-verification-otp",
   "sign-in/email-otp",
 ]);
-
-function localDemoEnabled(): boolean {
-  return process.env.NODE_ENV === "development" || process.env.YUGORA_TEST_IDENTITY === "demo";
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -54,7 +50,7 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
 
   const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
   if (!baseUrl) {
-    if (routePath === "get-session" && localDemoEnabled()) {
+    if (routePath === "get-session" && isLocalOrTestDemoMode()) {
       const id = process.env.DEMO_USER_ID?.trim() || "demo-user";
       return json({ session: { id: "local-demo-session" }, user: { id, email: "demo@yugora.test", name: "YUGORA Guest" } });
     }
