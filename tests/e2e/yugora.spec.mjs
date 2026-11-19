@@ -163,6 +163,16 @@ test("desktop hover adds depth without triggering a swipe", async ({ page }) => 
   expect(server.swipeRequests).toHaveLength(0);
 });
 
+test("arrow shortcuts do not swipe while an interactive control has focus", async ({ page }) => {
+  const server = await openDiscover(page);
+  const likeButton = page.getByRole("button", { name: "Like this profile" });
+  await likeButton.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
+  await expect(likeButton).toBeFocused();
+  expect(server.swipeRequests).toHaveLength(0);
+});
+
 test("keyboard arrows use the same Like/Pass API mutation", async ({ page }) => {
   const server = await openDiscover(page);
   await page.keyboard.press("ArrowRight");

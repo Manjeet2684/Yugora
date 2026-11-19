@@ -4,7 +4,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -188,8 +187,8 @@ function ProfileCard({
       <ProfileImage profile={profile} className="profile-card-photo" />
       <div className="photo-scrim" />
       <div className="card-topline">
-        <span className="photo-index"><span/> A FACE, A STORY</span>
-        <span className="photo-number">01 <i>/</i> 01</span>
+        <span className="card-eyebrow"><span /> DISCOVER SOMEONE NEW</span>
+        <span className="card-promise">A MUTUAL YES</span>
       </div>
       <div className="swipe-stamp swipe-stamp-like" style={{ opacity: likeOpacity }}>LIKE</div>
       <div className="swipe-stamp swipe-stamp-pass" style={{ opacity: passOpacity }}>PASS</div>
@@ -389,7 +388,10 @@ export default function YugoraApp() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
       const target = event.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      if (target && (
+        target.isContentEditable ||
+        target.closest('input, textarea, select, button, a[href], [contenteditable="true"], [role="button"], [role="link"], [role="menuitem"], [role="textbox"]')
+      )) return;
       if (event.key === "ArrowRight") { event.preventDefault(); void submitSwipe("LIKE"); }
       if (event.key === "ArrowLeft") { event.preventDefault(); void submitSwipe("PASS"); }
     };
@@ -397,7 +399,7 @@ export default function YugoraApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [screen, currentProfile, celebration, submitSwipe]);
 
-  const activeScreenTitle = useMemo(() => screen === "discover" ? "Discover" : screen === "matches" ? "Matches" : "Home", [screen]);
+  const activeScreenTitle = screen === "discover" ? "Discover" : screen === "matches" ? "Matches" : "Home";
 
   return (
     <main className="app-frame">
@@ -419,7 +421,7 @@ export default function YugoraApp() {
                 {feedStatus === "ready" && currentProfile && (
                   <>
                     <div className="card-stack-back card-stack-back-two"/><div className="card-stack-back card-stack-back-one"/>
-                    <ProfileCard profile={currentProfile} drag={drag} exitDirection={exitDirection} busy={busy} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}/>
+                    <ProfileCard key={currentProfile.id} profile={currentProfile} drag={drag} exitDirection={exitDirection} busy={busy} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}/>
                     <div className="swipe-actions" aria-label="Profile actions">
                       <button className="action-button action-pass" onClick={() => void submitSwipe("PASS")} disabled={busy} aria-label="Pass on this profile"><Icon name="x" size={25}/></button>
                       <span className="action-hint">NOT A MATCH? <b>THAT&apos;S OKAY.</b></span>
