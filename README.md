@@ -12,7 +12,7 @@
 
 YUGORA is a standalone implementation of the Coy SDE Intern assignment. It has an editorial **Home** experience, passwordless email sign-in, an editable personal profile, a functional **Discover** experience and a **Matches** view containing confirmed mutual matches only.
 
-The demo contains 30 fictional profiles and eight seeded incoming likes. Each person signs in with a one-time code sent to their email address. User identity is resolved on the server from the Neon Auth session; no user ID is accepted from the browser. It does not use Coy production code, user data or private services.
+The demo contains 30 fictional profiles and eight seeded incoming likes. Email sign-in is available for the full product experience. For assignment review, the protected Preview also offers a one-click **Explore assignment demo** path that uses the server-configured single demo identity, so reviewers do not need to register or receive an OTP. This Preview-only mode is ignored by Production. User identity is resolved on the server; no user ID is accepted from the browser. It does not use Coy production code, user data or private services.
 
 ## Core behavior
 
@@ -91,7 +91,7 @@ The current workflow is [YUGORA quality gates](.github/workflows/architecture-ch
 
 ## Protected Preview
 
-The current candidate is deployed to a protected Vercel Preview:
+The current candidate is deployed to a protected Vercel Preview. On the landing page, choose **Explore assignment demo** for the no-account evaluation flow, or **Get started** to test real email OTP sign-in:
 
 - [Open the YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/)
 - Git branch: `feature/postgres-production-hardening`
@@ -104,7 +104,7 @@ Both PostgreSQL migrations have applied successfully. The idempotent seed create
 
 Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches). The Matches response has private/no-store caching; deployed responses include HSTS and baseline security headers. Hosted `POST /swipe` acceptance checks passed for idempotent retries, conflicting decisions, unknown profiles, client actor overrides, unsupported media type, malformed JSON and oversized bodies. The configured edge rate limit was exercised: 60 requests returned 200 and request 61 returned 429. A brand-new reciprocal-match creation and persistence across separate Function invocations remain to be verified on a fresh QA identity.
 
-The Vercel project remains SSO-protected. No Production database variables have been configured and no Production deployment has been promoted. The Preview uses Neon Auth email OTP on the dedicated Neon branch, and application identity comes from the HttpOnly auth session. Neon recommends a dedicated SMTP provider for production email delivery; the branch's shared sender is suitable for development/Preview testing only.
+The Vercel project remains SSO-protected. The YUGORA_PUBLIC_DEMO_MODE=true switch is configured only for Preview on this feature branch and is ignored by Production runtimes. The shared demo identity is for assignment evaluation only; its persisted swipe decisions and matches are shared by people using that demo. No Production database variables have been configured and no Production deployment has been promoted. The Preview uses Neon Auth email OTP on the dedicated Neon branch, and application identity comes from the HttpOnly auth session. Neon recommends a dedicated SMTP provider for production email delivery; the branch's shared sender is suitable for development/Preview testing only.
 
 See [security and release review](docs/SECURITY-REVIEW.md) for the remaining deployment gates.
 
