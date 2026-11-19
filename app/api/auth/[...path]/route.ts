@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 // First-party proxy: keeps the Neon Auth session cookie on the YUGORA origin.
+import { isPublicDemoMode } from "../../../../src/infrastructure/auth/neon-auth-context.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,10 @@ const ALLOWED_PATHS = new Set([
 
 function localDemoEnabled(): boolean {
   return process.env.NODE_ENV === "development" || process.env.YUGORA_TEST_IDENTITY === "demo";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function json(payload: unknown, status = 200): Response {
@@ -101,7 +106,17 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
     responseHeaders.append("set-cookie", cookie.replace(/;\s*domain=[^;]+/giu, ""));
   }
 
-  return new Response(await upstream.arrayBuffer(), { status: upstream.status, headers: responseHeaders });
+  const responseBody = await upstream.arrayBuffer();
+  if (routePath === "get-session" && isPublicDemoMode()) {
+    let payload: unknown = null;
+    try { payload = JSON.parse(new TextDecoder().decode(responseBody)); } catch { /* Treat an empty/invalid session response as signed out. */ }
+    const user = isRecord(payload) && isRecord(payload.user) ? payload.user : null;
+    if (upstream.status === 401 || upstream.status === 403 || !user || typeof user.id !== "string") {
+      return json({ user: null, demoMode: true });
+    }
+  }
+
+  return new Response(responseBody, { status: upstream.status, headers: responseHeaders });
 }
 
 export function GET(request: Request, context: RouteContext): Promise<Response> {
