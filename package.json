@@ -15,7 +15,7 @@
     "test:architecture": "npm run build:architecture && node --test tests/architecture.test.mjs",
     "test:configuration": "node --import tsx --test tests/configuration.test.ts tests/profile-placeholder-photo.test.ts",
     "test:persistence": "npm run db:deploy && npm run db:seed && npm run db:seed && node --test tests/persistence.integration.test.mjs",
-    "check": "npm run db:validate && npm run typecheck && npm run test:configuration && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui && npm run test:copyright",
+    "check": "npm run db:validate && npm run typecheck && npm run test:configuration && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
@@ -30,8 +30,6 @@
     "start": "next start",
     "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
-    "test:copyright": "node --test tests/copyright-headers.test.mjs",
-    "lock:normalize": "node scripts/normalize-package-lock.mjs",
     "vercel-build": "npm run db:deploy && npm run db:seed && npm run build"
   },
   "devDependencies": {

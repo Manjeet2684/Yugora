@@ -77,9 +77,6 @@ function hasInfrastructureUnavailableCode(error: unknown): boolean {
     "P1008", // operation timed out
     "P1017", // server closed connection
     "P2024", // connection pool timeout
-    "SQLITE_BUSY",
-    "SQLITE_CANTOPEN",
-    "SQLITE_IOERR",
   ]);
 
   let candidate: unknown = error;

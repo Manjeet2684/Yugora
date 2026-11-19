@@ -152,6 +152,17 @@ test("mutual Like celebrates only the returned match and displays it in Matches"
   expect(server.swipeRequests[0]).toEqual({ profileId: profileA.id, direction: "LIKE" });
 });
 
+test("desktop hover adds depth without triggering a swipe", async ({ page }) => {
+  const server = await openDiscover(page);
+  const card = page.locator(".profile-card");
+  const image = page.locator(".profile-card-photo img");
+  await expect(image).toBeVisible();
+  await card.hover({ position: { x: 180, y: 160 } });
+  await expect.poll(() => image.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
+  expect(server.swipeRequests).toHaveLength(0);
+});
+
 test("keyboard arrows use the same Like/Pass API mutation", async ({ page }) => {
   const server = await openDiscover(page);
   await page.keyboard.press("ArrowRight");

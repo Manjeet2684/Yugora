@@ -26,7 +26,7 @@ test("Prisma CLI accepts the legacy DIRECT_URL alias when Neon variable is absen
   );
 });
 
-test("Prisma CLI falls back to DATABASE_URL for local and CI environments", () => {
+test("Prisma CLI uses DATABASE_URL when no deployment environment is present", () => {
   assert.equal(
     resolveMigrationDatabaseUrl({
       DATABASE_URL: "postgresql://local.example/app",
@@ -35,6 +35,26 @@ test("Prisma CLI falls back to DATABASE_URL for local and CI environments", () =
   );
 });
 
-test("Prisma CLI uses the harmless local PostgreSQL default when no URL is supplied", () => {
+test("Prisma CLI keeps a local PostgreSQL default for local development", () => {
   assert.equal(resolveMigrationDatabaseUrl({}), LOCAL_URL);
+});
+
+test("production migrations fail closed when only the pooled runtime URL is configured", () => {
+  assert.throws(
+    () => resolveMigrationDatabaseUrl({
+      DATABASE_URL: "postgresql://pool.example/app",
+      VERCEL: "1",
+    }),
+    /DATABASE_URL_UNPOOLED/,
+  );
+});
+
+test("production migrations reject a missing direct URL even when NODE_ENV is production", () => {
+  assert.throws(
+    () => resolveMigrationDatabaseUrl({
+      DATABASE_URL: "postgresql://pool.example/app",
+      NODE_ENV: "production",
+    }),
+    /DATABASE_URL_UNPOOLED/,
+  );
 });

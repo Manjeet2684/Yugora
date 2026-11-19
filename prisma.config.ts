@@ -15,12 +15,17 @@ type MigrationEnvironment = Readonly<Record<string, string | undefined>>;
 export function resolveMigrationDatabaseUrl(
   environment: MigrationEnvironment = process.env,
 ): string {
-  return (
-    environment.DATABASE_URL_UNPOOLED ??
-    environment.DIRECT_URL ??
-    environment.DATABASE_URL ??
-    LOCAL_POSTGRES_URL
-  );
+  const directUrl = environment.DATABASE_URL_UNPOOLED ?? environment.DIRECT_URL;
+  if (directUrl) return directUrl;
+
+  // Never let a deployed migration silently run through a pooled runtime URL.
+  if (environment.VERCEL === "1" || environment.NODE_ENV === "production") {
+    throw new Error(
+      "DATABASE_URL_UNPOOLED (or DIRECT_URL) must be configured for production migrations.",
+    );
+  }
+
+  return environment.DATABASE_URL ?? LOCAL_POSTGRES_URL;
 }
 
 export default defineConfig({

@@ -64,10 +64,6 @@ button:focus-visible { outline: 3px solid rgba(187, 128, 157, .72); outline-offs
 .profile-card-photo { position: absolute; inset: 0; }
 .photo-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(28,20,28,.19) 0%, transparent 28%, rgba(24,17,24,.04) 45%, rgba(23,17,24,.88) 100%); }
 .card-topline { position: absolute; z-index: 2; top: 18px; right: 19px; left: 19px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,.9); }
-.photo-index { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid rgba(255,255,255,.28); border-radius: 30px; background: rgba(38,28,39,.25); backdrop-filter: blur(10px); font-size: 8px; font-weight: 800; letter-spacing: .15em; }
-.photo-index span { width: 6px; height: 6px; border-radius: 50%; background: #d4b48a; }
-.photo-number { color: rgba(255,255,255,.75); font: 600 10px ui-monospace, monospace; letter-spacing: .08em; }
-.photo-number i { padding: 0 3px; color: rgba(255,255,255,.46); font-style: normal; }
 .profile-card-content { position: absolute; z-index: 2; right: 26px; bottom: 26px; left: 26px; color: #fff; pointer-events: none; }
 .profile-location { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,.81); font-size: 11px; font-weight: 600; }
 .profile-card-content h2 { margin: 10px 0 9px; color: #fff; font: 500 clamp(31px, 4vw, 42px)/1 Georgia, serif; letter-spacing: -.035em; text-shadow: 0 2px 15px rgba(0,0,0,.15); }
@@ -228,4 +224,154 @@ kbd { display: inline-grid; min-width: 19px; height: 19px; place-items: center; 
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+
+/* Focused interaction polish: motion is progressive enhancement, never a business rule. */
+.card-eyebrow,
+.card-promise {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 30px;
+  background: rgba(38,28,39,.28);
+  color: rgba(255,255,255,.94);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  backdrop-filter: blur(12px);
+}
+.card-eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d4b48a;
+  box-shadow: 0 0 0 4px rgba(212,180,138,.14);
+}
+.card-promise {
+  border-color: rgba(244,220,232,.35);
+  background: rgba(190,139,164,.2);
+  color: #fff4f8;
+}
+.profile-card-photo {
+  animation: profile-photo-arrive .72s cubic-bezier(.2,.8,.2,1) both;
+}
+.profile-card-content {
+  animation: profile-copy-arrive .48s .08s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes profile-photo-arrive {
+  from { opacity: .45; }
+  to { opacity: 1; }
+}
+@keyframes profile-copy-arrive {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+.section-heading > div:first-child {
+  animation: heading-arrive .55s cubic-bezier(.2,.8,.2,1) both;
+}
+.discover-progress {
+  animation: heading-arrive .55s .08s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes heading-arrive {
+  from { opacity: 0; translate: 0 9px; }
+  to { opacity: 1; translate: 0 0; }
+}
+.aside-note {
+  transition: border-color .28s ease, box-shadow .28s ease, background .28s ease;
+}
+.aside-ornament {
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), background .28s ease, box-shadow .28s ease;
+}
+.interest-list span {
+  transition: border-color .22s ease, background .22s ease, color .22s ease, translate .22s ease;
+}
+.match-card {
+  transition: border-color .28s ease, box-shadow .28s ease, translate .28s ease;
+}
+.profile-image img {
+  transition: transform .72s cubic-bezier(.2,.75,.25,1), filter .72s ease;
+}
+.nav-item,
+.action-button,
+.secondary-button,
+.primary-button,
+.mobile-nav-item {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:not(.nav-item-active):hover {
+    transform: translateX(4px);
+  }
+  .profile-card {
+    transition: box-shadow .32s ease, border-color .32s ease, filter .32s ease;
+  }
+  .profile-card:hover:not(.profile-card-busy) {
+    border-color: rgba(255,255,255,.92);
+    box-shadow: 0 32px 75px rgba(55,39,52,.26), 0 0 0 1px rgba(199,143,168,.12);
+  }
+  .profile-card:hover:not(.profile-card-busy) .profile-card-photo img {
+    transform: scale(1.045);
+    filter: saturate(1.07) contrast(1.015);
+  }
+  .profile-card:hover:not(.profile-card-busy) .card-promise {
+    background: rgba(190,139,164,.34);
+    border-color: rgba(255,255,255,.55);
+  }
+  .profile-card:hover:not(.profile-card-busy) .interest-list span:nth-child(odd) {
+    translate: 0 -2px;
+    border-color: rgba(255,255,255,.58);
+    background: rgba(255,255,255,.19);
+  }
+  .action-button:hover:not(:disabled) {
+    box-shadow: 0 13px 28px rgba(92,55,79,.17);
+  }
+  .action-like:hover:not(:disabled) {
+    box-shadow: 0 14px 30px rgba(160,102,131,.38);
+  }
+  .aside-note:hover {
+    border-color: rgba(168,109,137,.28);
+    background: rgba(255,255,255,.72);
+    box-shadow: 0 18px 46px rgba(68,48,64,.09);
+  }
+  .aside-note:hover .aside-ornament {
+    transform: rotate(-8deg) scale(1.08);
+    background: #ead8e1;
+    box-shadow: 0 7px 18px rgba(169,111,141,.16);
+  }
+  .match-card:hover {
+    translate: 0 -6px;
+    border-color: rgba(168,109,137,.28);
+    box-shadow: 0 20px 48px rgba(62,44,60,.12);
+  }
+  .match-card:hover .match-card-photo img {
+    transform: scale(1.045);
+  }
+  .interest-list-light span:hover {
+    translate: 0 -2px;
+    border-color: #d5b7c7;
+    background: #f1e4eb;
+  }
+}
+.nav-item:focus-visible,
+.mobile-nav-item:focus-visible,
+.action-button:focus-visible,
+.modal-close:focus-visible,
+.text-button:focus-visible,
+.toast-error button:focus-visible {
+  outline: 3px solid rgba(187,128,157,.78);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-card-photo,
+  .profile-card-content,
+  .section-heading > div:first-child,
+  .discover-progress {
+    animation: none !important;
+  }
+  .profile-image img {
+    transition: none !important;
+  }
 }

@@ -170,7 +170,7 @@ function ProfileCard({
     transform: exitDirection
       ? `translate3d(${exitDirection === "LIKE" ? "130%" : "-130%"}, -5%, 0) rotate(${exitDirection === "LIKE" ? 18 : -18}deg)`
       : `translate3d(${drag.x}px, ${drag.y * 0.18}px, 0) rotate(${tilt}deg)`,
-    transition: exitDirection ? "transform 260ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease" : drag.x === 0 && drag.y === 0 ? "transform 220ms ease" : "none",
+    transition: exitDirection ? "transform 260ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease" : drag.x === 0 && drag.y === 0 ? "transform 220ms ease, opacity 260ms ease, box-shadow 320ms ease, border-color 320ms ease" : "none",
     opacity: exitDirection ? 0 : 1,
   };
   const likeOpacity = Math.min(1, Math.max(0, drag.x / 100));
