@@ -106,6 +106,33 @@ test("real PostgreSQL-backed browser journey persists a seeded mutual match acro
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
 });
 
+test("landing offers a one-click assignment demo without an email sign-in", async ({ page }) => {
+  await page.route("**/api/auth/get-session", (route) => route.fulfill(json({ user: null })));
+  await page.route("**/api/profile", (route) => route.fulfill(json({
+    profile: {
+      id: "demo-profile",
+      name: "YUGORA Guest",
+      age: 25,
+      photoUrl: profileA.photoUrl,
+      bio: "Here for genuine conversations and good coffee.",
+      locationLabel: "New Delhi",
+      interests: ["Coffee", "Reading", "Music"],
+      email: "demo@yugora.test",
+    },
+  })));
+  await stubApi(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /A connection/ })).toBeVisible();
+  const demoButton = page.getByRole("button", { name: "Explore assignment demo" });
+  await expect(demoButton).toBeVisible();
+  await demoButton.click();
+  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
+  await expect(page.getByText("YUGORA Guest, 25")).toBeVisible();
+  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
+});
+
 test("opens Discover with one profile card and accessible Like/Pass actions", async ({ page }) => {
   await openDiscover(page);
   await expect(page.locator(".profile-card")).toHaveCount(1);
