@@ -345,7 +345,7 @@ export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profi
     }
   }, []);
 
-  useEffect(() => { void loadFeed(); }, [loadFeed]);
+  useEffect(() => { if (screen === "discover") void loadFeed(); }, [screen, loadFeed]);
   useEffect(() => { if (screen === "matches") void loadMatches(); }, [screen, loadMatches]);
 
   const submitSwipe = useCallback(async (direction: SwipeDirection) => {
@@ -429,7 +429,7 @@ export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profi
               <h1 id="home-heading">Good connections<br/>begin with <em>being you.</em></h1>
               <p>YUGORA gives people room to discover each other without turning connection into a numbers game. Your interest is private until it is returned.</p>
               <div className="home-actions">
-                <button className="primary-button" onClick={() => { setScreen("discover"); void loadFeed(); }}>Explore Discover <Icon name="arrow" size={16}/></button>
+                <button className="primary-button" onClick={() => setScreen("discover")}>Explore Discover <Icon name="arrow" size={16}/></button>
                 <button className="secondary-button" onClick={onEditProfile}>Edit your profile</button>
               </div>
               {profile && <div className="home-profile-preview">

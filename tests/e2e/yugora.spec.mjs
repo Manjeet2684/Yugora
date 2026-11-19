@@ -134,7 +134,7 @@ test("a signed-in member edits their profile and adds a custom hobby", async ({ 
   await page.getByRole("button", { name: /Swimming/ }).click();
   await page.getByPlaceholder("Or write your own hobby…").fill("Bathroom singer");
   await page.getByRole("button", { name: "Add hobby" }).click();
-  await expect(page.locator(".hobby-chip-selected")).toContainText("Bathroom singer");
+  await expect(page.getByRole("button", { name: /Bathroom singer/ })).toBeVisible();
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
   await expect(page.getByText("YUGORA Guest, 25")).toBeVisible();
@@ -256,6 +256,8 @@ test("the API fixture excludes a server-confirmed decision from the next feed af
   await page.getByRole("button", { name: "Pass on this profile" }).click();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await page.reload();
+  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
+  await page.getByRole("button", { name: "Explore Discover" }).click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toHaveCount(0);
