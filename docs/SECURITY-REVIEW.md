@@ -9,7 +9,7 @@
 
 The assignment's Part B application is implemented on the candidate branch: 30 fictional profiles, eight incoming demo likes, Discover, persistent swipe decisions, mutual-only matching, Matches and the three required APIs. The application uses Next.js, TypeScript, Prisma 7 and PostgreSQL.
 
-The core privacy rule is enforced in the domain, repositories and database. A match requires reciprocal LIKE records. The feed excludes viewer-authored decisions but does not expose incoming one-sided interest. Swipe requests are bounded and validated; the server resolves the acting demo identity; responses are private/no-store and unexpected server errors are redacted.
+The core privacy rule is enforced in the domain, repositories and database. A match requires reciprocal LIKE records. The feed excludes viewer-authored decisions but does not expose incoming one-sided interest. The protected assignment Preview provides a one-click guest entry using the single server-resolved demo identity; in that mode, the feed is restricted to the 30 fictional seeded profiles so member-owned profiles are not mixed into the assignment catalogue. Swipe requests are bounded and validated; the server resolves the acting demo identity; responses are private/no-store and unexpected server errors are redacted.
 
 ## Controls in place
 
@@ -27,6 +27,7 @@ The core privacy rule is enforced in the domain, repositories and database. A ma
 The current deployment commit `177a47c37ef10a82245e75c8f4093310c94dcca2` is deployed to the [protected YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/).
 
 - The Vercel project remains SSO-protected; `live` remains false and no Production environment variables are configured.
+- `YUGORA_PUBLIC_DEMO_MODE=true` is a plain, branch-scoped Preview variable for `feature/postgres-production-hardening`. The application guard enables it only outside Production or on a Vercel Preview runtime; Production runtimes ignore the flag. The assignment entry is intentionally a shared single-user demo, not a production identity model.
 - A dedicated Neon child branch named `yugora-demo-ready` was created from the Marketplace-created project's default branch in Singapore (`aws-ap-southeast-1`). The parent default branch was not modified by YUGORA migrations or seed.
 - Neon connection variables are scoped to Preview and the feature branch only: sensitive pooled `DATABASE_URL`, sensitive direct `DATABASE_URL_UNPOOLED`, and `DEMO_USER_ID`. No Production variables are present.
 - The Neon read-write endpoint has transaction pooling enabled. Both connection URLs use explicit `sslmode=verify-full`.
