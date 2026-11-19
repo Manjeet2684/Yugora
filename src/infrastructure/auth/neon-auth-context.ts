@@ -12,6 +12,20 @@ const globalForYugoraAuth = globalThis as typeof globalThis & {
   __yugoraPrismaClient?: PrismaClient;
 };
 
+/** Public assignment mode is Preview-only; Production always requires a real auth session. */
+export function isPublicDemoMode(env: Readonly<Record<string, string | undefined>> = process.env): boolean {
+  return env.YUGORA_PUBLIC_DEMO_MODE?.trim().toLocaleLowerCase("en-US") === "true"
+    && env.VERCEL_ENV !== "production";
+}
+
+function publicDemoUser(): AuthenticatedUser {
+  return {
+    id: process.env.DEMO_USER_ID?.trim() || "demo-user",
+    email: "demo@yugora.test",
+    name: "YUGORA Guest",
+  };
+}
+
 /** One Prisma client per warm Node.js process; never create a pool per request. */
 export function getSharedPrismaClient(): PrismaClient {
   if (!globalForYugoraAuth.__yugoraPrismaClient) {
@@ -31,17 +45,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export async function getAuthenticatedUser(request: Request): Promise<AuthenticatedUser | null> {
   const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
   if (!baseUrl) {
-    // Explicitly restricted to local development and automated browser tests.
-    // Production never falls back to the assignment's shared demo identity.
-    if (process.env.NODE_ENV === "development" || process.env.YUGORA_TEST_IDENTITY === "demo") {
-      const id = process.env.DEMO_USER_ID?.trim() || "demo-user";
-      return { id, email: "demo@yugora.test", name: "YUGORA Guest" };
+    // Local/CI fixtures and the explicitly enabled Preview assignment demo only.
+    if (process.env.NODE_ENV === "development" || process.env.YUGORA_TEST_IDENTITY === "demo" || isPublicDemoMode()) {
+      return publicDemoUser();
     }
     return null;
   }
 
   const cookie = request.headers.get("cookie");
-  if (!cookie) return null;
+  if (!cookie) return isPublicDemoMode() ? publicDemoUser() : null;
 
   const origin = new URL(request.url).origin;
   const endpoint = `${baseUrl.replace(/\/+$/u, "")}/get-session`;
@@ -57,15 +69,21 @@ export async function getAuthenticatedUser(request: Request): Promise<Authentica
     redirect: "manual",
   });
 
-  if (response.status === 401 || response.status === 403) return null;
+  if (response.status === 401 || response.status === 403) {
+    return isPublicDemoMode() ? publicDemoUser() : null;
+  }
   if (!response.ok) {
     throw new Error("The authentication service could not validate this session.");
   }
 
   const payload: unknown = await response.json().catch(() => null);
-  if (!isRecord(payload) || !isRecord(payload.user)) return null;
+  if (!isRecord(payload) || !isRecord(payload.user)) {
+    return isPublicDemoMode() ? publicDemoUser() : null;
+  }
   const user = payload.user;
-  if (typeof user.id !== "string" || user.id.trim().length === 0) return null;
+  if (typeof user.id !== "string" || user.id.trim().length === 0) {
+    return isPublicDemoMode() ? publicDemoUser() : null;
+  }
 
   return {
     id: user.id,
