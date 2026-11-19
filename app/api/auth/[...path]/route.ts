@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 // First-party proxy: keeps the Neon Auth session cookie on the YUGORA origin.
-import { isPublicDemoMode } from "../../../../src/infrastructure/auth/neon-auth-context.js";
+import { isPublicDemoMode } from "../../../../src/infrastructure/auth/demo-mode.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
