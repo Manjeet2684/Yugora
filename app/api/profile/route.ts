@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { randomUUID } from "node:crypto";
 import { createPlaceholderProfilePhotoUrl } from "../../../src/shared/profile-placeholder-photo.js";
-import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient, isPublicDemoMode } from "../../../src/infrastructure/auth/neon-auth-context.js";
+import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient } from "../../../src/infrastructure/auth/neon-auth-context.js";
+import { isPublicDemoMode } from "../../../src/infrastructure/auth/demo-mode.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
