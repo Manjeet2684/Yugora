@@ -54,7 +54,7 @@ Successful mutual-match response contains `matched: true` and the confirmed matc
 
 ## GET `/matches`
 
-Returns persisted mutual matches for the configured demo user only:
+Returns persisted mutual matches for the current user:
 
 ```json
 { "matches": [] }
@@ -89,6 +89,6 @@ All errors use this stable shape:
 
 Unexpected error details, SQL, adapter messages, stack traces and filesystem paths are never returned to clients.
 
-## Assignment identity model
+## Identity model
 
-The assignment explicitly says no external auth is needed and assumes one logged-in user. Gate 3 therefore retains the documented `DEMO_USER_ID` server-side adapter. This is an assignment/demo identity boundary, not production multi-user authentication. The API does not accept an actor ID from the browser.
+Real accounts use Neon Auth email OTP and a server-validated HttpOnly session. The protected assignment Preview also offers a shared single-user identity so a reviewer can enter the seeded demo without registering. That identity is enabled only in Preview; Production requires a real authenticated session. The API never accepts an actor ID from the browser.
