@@ -136,6 +136,9 @@ test("a signed-in member edits their profile and adds a custom hobby", async ({ 
   await page.getByRole("button", { name: "Add hobby" }).click();
   await expect(page.getByRole("button", { name: /Bathroom singer/ })).toBeVisible();
   await page.getByRole("button", { name: "Save changes" }).click();
+  await page.waitForTimeout(250);
+  const profileSaveError = await page.locator(".profile-form .form-error").textContent().catch(() => null);
+  if (profileSaveError) throw new Error("PROFILE_SAVE_ERROR: " + profileSaveError);
   await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
   await expect(page.getByText("YUGORA Guest, 25")).toBeVisible();
 });
