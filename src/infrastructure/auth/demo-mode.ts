@@ -11,3 +11,13 @@ export function isPublicDemoMode(
   const isProductionRuntime = env.NODE_ENV === "production";
   return enabled && (!isProductionRuntime || env.VERCEL_ENV === "preview");
 }
+
+/** Local development and explicitly marked CI runs may use the seeded test identity. */
+export function isLocalOrTestDemoMode(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): boolean {
+  if (env.NODE_ENV === "development") return true;
+  return env.YUGORA_TEST_IDENTITY?.trim() === "demo"
+    && env.CI === "true"
+    && env.VERCEL_ENV !== "production";
+}
