@@ -111,8 +111,6 @@ See [security and release review](docs/SECURITY-REVIEW.md) for the remaining dep
 
 ## Assignment notes
 
-See the [submission and reviewer checklist](docs/SUBMISSION-CHECKLIST.md) for the exact demo walkthrough, requirement mapping and the Part A items still needing manual validation.
-
 Part A's two preliminary Coy feature recommendations and their evidence boundary are in [Part A recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md). The private Coy walkthrough still needs to be completed before those recommendations are presented as personally validated.
 
 ---
