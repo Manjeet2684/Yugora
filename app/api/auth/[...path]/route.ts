@@ -54,7 +54,7 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
       const id = process.env.DEMO_USER_ID?.trim() || "demo-user";
       return json({ session: { id: "local-demo-session" }, user: { id, email: "demo@yugora.test", name: "YUGORA Guest" } });
     }
-    if (routePath === "sign-out" && localDemoEnabled()) return json({ success: true });
+    if (routePath === "sign-out" && isLocalOrTestDemoMode()) return json({ success: true });
     return json({ message: "Email sign-in is not configured for this deployment." }, 503);
   }
 
