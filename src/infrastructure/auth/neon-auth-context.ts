@@ -1,5 +1,7 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { PrismaClient } from "../../generated/prisma/client.js";
+import { isPublicDemoMode } from "./demo-mode.js";
+export { isPublicDemoMode } from "./demo-mode.js";
 import { createPrismaClient } from "../database/prisma-client.js";
 
 export interface AuthenticatedUser {
@@ -11,13 +13,6 @@ export interface AuthenticatedUser {
 const globalForYugoraAuth = globalThis as typeof globalThis & {
   __yugoraPrismaClient?: PrismaClient;
 };
-
-/** Public assignment mode is Preview-only; Production always requires a real auth session. */
-export function isPublicDemoMode(env: Readonly<Record<string, string | undefined>> = process.env): boolean {
-  const enabled = env.YUGORA_PUBLIC_DEMO_MODE?.trim().toLocaleLowerCase("en-US") === "true";
-  const isProductionRuntime = env.NODE_ENV === "production";
-  return enabled && (!isProductionRuntime || env.VERCEL_ENV === "preview");
-}
 
 function publicDemoUser(): AuthenticatedUser {
   return {
