@@ -14,8 +14,9 @@ const globalForYugoraAuth = globalThis as typeof globalThis & {
 
 /** Public assignment mode is Preview-only; Production always requires a real auth session. */
 export function isPublicDemoMode(env: Readonly<Record<string, string | undefined>> = process.env): boolean {
-  return env.YUGORA_PUBLIC_DEMO_MODE?.trim().toLocaleLowerCase("en-US") === "true"
-    && env.VERCEL_ENV !== "production";
+  const enabled = env.YUGORA_PUBLIC_DEMO_MODE?.trim().toLocaleLowerCase("en-US") === "true";
+  const isProductionRuntime = env.NODE_ENV === "production";
+  return enabled && (!isProductionRuntime || env.VERCEL_ENV === "preview");
 }
 
 function publicDemoUser(): AuthenticatedUser {
