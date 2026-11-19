@@ -425,3 +425,46 @@ test('Unicode match participants use the same canonical byte order as PostgreSQL
   assert.equal(persisted.match.userLowId, privateUseId);
   assert.equal(persisted.match.userHighId, supplementaryId);
 });
+
+
+test('public assignment demo feed contains only the 30 seeded demo profiles', async () => {
+  const viewerId = asUserId(unique('assignment-demo-viewer'));
+  const seededOwnerId = `yugora-user-fixture-${randomUUID()}`;
+  const otherOwnerId = unique('ordinary-member');
+  const seededProfileId = asProfileId(`yugora-profile-fixture-${randomUUID()}`);
+  const otherProfileId = asProfileId(unique('ordinary-profile'));
+  await ensureUser(viewerId);
+  await ensureProfile({ userId: asUserId(seededOwnerId), profileId: seededProfileId, name: 'Seeded Assignment Profile' });
+  await ensureProfile({ userId: asUserId(otherOwnerId), profileId: otherProfileId, name: 'Ordinary Member Profile' });
+
+  const previousDemoFlag = process.env.YUGORA_PUBLIC_DEMO_MODE;
+  const previousDemoUserId = process.env.DEMO_USER_ID;
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  try {
+    process.env.YUGORA_PUBLIC_DEMO_MODE = 'true';
+    process.env.DEMO_USER_ID = viewerId;
+    process.env.VERCEL_ENV = 'preview';
+
+    const repository = new PrismaProfileRepository(prisma);
+    const assignmentFeed = await repository.listEligibleForViewer(viewerId);
+    const assignmentIds = assignmentFeed.map((profile) => profile.id);
+    assert.ok(assignmentIds.includes(seededProfileId));
+    assert.ok(!assignmentIds.includes(otherProfileId),
+      'the shared reviewer identity must not see profiles outside the fictional seeded catalogue');
+
+    const normalViewerId = asUserId(unique('normal-viewer'));
+    await ensureUser(normalViewerId);
+    const normalFeed = await repository.listEligibleForViewer(normalViewerId);
+    const normalIds = normalFeed.map((profile) => profile.id);
+    assert.ok(normalIds.includes(seededProfileId));
+    assert.ok(normalIds.includes(otherProfileId),
+      'ordinary signed-in users must continue to discover other active members');
+  } finally {
+    if (previousDemoFlag === undefined) delete process.env.YUGORA_PUBLIC_DEMO_MODE;
+    else process.env.YUGORA_PUBLIC_DEMO_MODE = previousDemoFlag;
+    if (previousDemoUserId === undefined) delete process.env.DEMO_USER_ID;
+    else process.env.DEMO_USER_ID = previousDemoUserId;
+    if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previousVercelEnv;
+  }
+});
