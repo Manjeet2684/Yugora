@@ -26,6 +26,8 @@ export default defineConfig({
     env: {
       DATABASE_URL: process.env.DATABASE_URL ?? "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public",
       DEMO_USER_ID: "demo-user",
+      YUGORA_TEST_IDENTITY: "demo",
+      CI: "true",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },
