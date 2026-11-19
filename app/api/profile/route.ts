@@ -2,7 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { createPlaceholderProfilePhotoUrl } from "../../../src/shared/profile-placeholder-photo.js";
 import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient } from "../../../src/infrastructure/auth/neon-auth-context.js";
-import { isPublicDemoMode } from "../../../src/infrastructure/auth/demo-mode.js";
+import { isLocalOrTestDemoMode, isPublicDemoMode } from "../../../src/infrastructure/auth/demo-mode.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ export async function GET(request: Request): Promise<Response> {
     if (row) return json({ profile: mapProfile(row, context.user.email) });
 
     // Local/CI fixture only. Real Preview accounts must complete profile setup.
-    if (context.user.email === "demo@yugora.test" && (process.env.YUGORA_TEST_IDENTITY === "demo" || isPublicDemoMode())) {
+    if (context.user.email === "demo@yugora.test" && (isLocalOrTestDemoMode() || isPublicDemoMode())) {
       const name = "YUGORA Guest";
       return json({ profile: {
         id: "local-demo-profile",
