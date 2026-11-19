@@ -80,6 +80,7 @@ For real email sign-in, configure `NEON_AUTH_BASE_URL` for your Neon Auth projec
 
 ```bash
 npm run check
+npx playwright install chromium
 npm run test:e2e
 npm audit --audit-level=high
 ```
