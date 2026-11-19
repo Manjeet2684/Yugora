@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveMigrationDatabaseUrl } from "../prisma.config.js";
+import { isPublicDemoMode } from "../src/infrastructure/auth/demo-mode.js";
 
 const LOCAL_URL = "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public";
 
@@ -59,7 +60,6 @@ test("production migrations reject a missing direct URL even when NODE_ENV is pr
   );
 });
 
-import { isPublicDemoMode } from "../src/infrastructure/auth/demo-mode.js";
 
 test("public assignment demo is enabled on an opted-in Preview deployment", () => {
   assert.equal(isPublicDemoMode({
