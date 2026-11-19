@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { PrismaClient } from "../../generated/prisma/client.js";
 import { isPublicDemoMode } from "./demo-mode.js";
-export { isPublicDemoMode } from "./demo-mode.js";
 import { createPrismaClient } from "../database/prisma-client.js";
 
 export interface AuthenticatedUser {
