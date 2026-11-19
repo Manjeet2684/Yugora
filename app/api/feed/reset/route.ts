@@ -10,10 +10,18 @@ function json(payload: unknown, status = 200): Response {
 }
 
 function sameOrigin(request: Request): boolean {
-  const expected = new URL(request.url).origin;
+  const requestUrl = new URL(request.url);
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProtocol || requestUrl.protocol.replace(/:$/u, "");
+  const host = request.headers.get("host");
+  const acceptedOrigins = new Set([requestUrl.origin]);
+  if (host) acceptedOrigins.add(`${protocol}://${host}`);
+
   const origin = request.headers.get("origin");
   if (origin) {
-    try { if (new URL(origin).origin !== expected) return false; } catch { return false; }
+    try {
+      if (!acceptedOrigins.has(new URL(origin).origin)) return false;
+    } catch { return false; }
   }
   return request.headers.get("sec-fetch-site") !== "cross-site";
 }
