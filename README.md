@@ -87,14 +87,14 @@ The current candidate is deployed to a protected Vercel Preview:
 
 - [Open the YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/)
 - Git branch: `feature/postgres-production-hardening`
-- Revision: `7c8da3e633f274d1dcae03bff7fbdb9f9279532c`
-- Neon branch: `yugora-preview` in Singapore (`aws-ap-southeast-1`)
+- Revision: `177a47c37ef10a82245e75c8f4093310c94dcca2`
+- Neon branch: `yugora-demo-ready` in Singapore (`aws-ap-southeast-1`)
 
-Vercel environment variables are scoped to Preview and this Git branch only: sensitive pooled `DATABASE_URL` for runtime traffic, sensitive direct `DATABASE_URL_UNPOOLED` for Prisma migrations, and `DEMO_USER_ID` for the assignment demo identity. The database branch uses transaction pooling and explicit `sslmode=verify-full` for both URLs.
+Vercel environment variables are scoped to Preview and this Git branch only: sensitive pooled `DATABASE_URL` for runtime traffic, sensitive direct `DATABASE_URL_UNPOOLED` for Prisma migrations, and `DEMO_USER_ID` for the assignment demo identity. The database branch uses transaction pooling and explicit `sslmode=verify-full` for both URLs. The earlier `yugora-preview` branch is preserved separately with the prior interaction history.
 
-Both PostgreSQL migrations have applied successfully. The idempotent seed created 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows and zero Match rows. The Neon default branch remains separate and has no YUGORA application tables.
+Both PostgreSQL migrations have applied successfully. The idempotent seed created 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows and zero Match rows. The Neon default branch remains separate and has no YUGORA application tables. The clean demo branch starts with zero demo-user decisions and zero matches.
 
-Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches). The Matches response has private/no-store caching; deployed responses include HSTS and baseline security headers. Hosted `POST /swipe`, persistence across separate Function invocations, and an actual edge HTTP 429 response have not yet been verified; the PostgreSQL/HTTP integration and Chromium CI suites cover the application behavior.
+Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches). The Matches response has private/no-store caching; deployed responses include HSTS and baseline security headers. Hosted `POST /swipe` acceptance checks passed for idempotent retries, conflicting decisions, unknown profiles, client actor overrides, unsupported media type, malformed JSON and oversized bodies. The configured edge rate limit was exercised: 60 requests returned 200 and request 61 returned 429. A brand-new reciprocal-match creation and persistence across separate Function invocations remain to be verified on a fresh QA identity.
 
 The Vercel project remains SSO-protected. No Production database variables have been configured and no Production deployment has been promoted. The app deliberately uses one shared demo identity, so do not expose it as an unrestricted public multi-user product.
 

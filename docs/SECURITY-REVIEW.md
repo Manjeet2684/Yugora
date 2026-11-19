@@ -24,13 +24,13 @@ The core privacy rule is enforced in the domain, repositories and database. A ma
 
 ## Protected Preview — verified 19 November 2026
 
-The current candidate commit `7c8da3e633f274d1dcae03bff7fbdb9f9279532c` is deployed to the [protected YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/).
+The current deployment commit `177a47c37ef10a82245e75c8f4093310c94dcca2` is deployed to the [protected YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/).
 
 - The Vercel project remains SSO-protected; `live` remains false and no Production environment variables are configured.
-- A dedicated Neon child branch named `yugora-preview` was created from the Marketplace-created project's default branch in Singapore (`aws-ap-southeast-1`). The parent default branch was not modified by YUGORA migrations or seed.
+- A dedicated Neon child branch named `yugora-demo-ready` was created from the Marketplace-created project's default branch in Singapore (`aws-ap-southeast-1`). The parent default branch was not modified by YUGORA migrations or seed.
 - Neon connection variables are scoped to Preview and the feature branch only: sensitive pooled `DATABASE_URL`, sensitive direct `DATABASE_URL_UNPOOLED`, and `DEMO_USER_ID`. No Production variables are present.
 - The Neon read-write endpoint has transaction pooling enabled. Both connection URLs use explicit `sslmode=verify-full`.
-- Both PostgreSQL migrations applied successfully. The idempotent seed produced 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows and zero Match rows.
+- Both PostgreSQL migrations applied successfully. The idempotent seed produced 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows, zero demo-user decisions and zero Match rows. The earlier `yugora-preview` branch retains its separate 30 swipe decisions and three mutual matches; it was not reset or deleted.
 - Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` with 30 public profiles, and `GET /matches` with zero matches. Matches responses have private/no-store cache headers; deployed responses include HSTS and baseline security headers.
 - The fresh Preview build completed successfully. The latest runtime-log query returned no entries.
 
@@ -44,11 +44,13 @@ The assignment permits one assumed logged-in user and no external authentication
 
 Keep Preview protected by Vercel SSO. This is assignment-compliant but is not a production multi-user identity system.
 
-### Hosted behavior still to verify
+### Hosted behavior — completed and outstanding
 
-The hosted smoke test exercised page load, `GET /feed` and `GET /matches`. The hosted `POST /swipe` and cross-invocation persistence path have not yet been directly exercised against this Preview. The PostgreSQL/HTTP integration tests and Chromium browser suite cover these flows in CI.
+The protected Preview was tested against the hosted `POST /swipe` handler using idempotent LIKE/PASS retries, an opposite-decision conflict, unknown profile, rejected client actor override, unsupported content type, malformed JSON and an oversized body. Expected responses (200, 409, 404, 400, 415 and 413) were observed. These were non-mutating retries or rejected requests.
 
-The Firewall rate-limit configuration is active and valid (60 requests per IP per 60 seconds), but an actual edge HTTP 429 response has not been verified. Do not state that live rate-limit behavior is tested.
+The active Firewall rule was exercised from a single test source: 60 `GET /feed` requests returned 200 and request 61 returned 429, matching the 60-per-60-second configuration.
+
+A fresh reciprocal-match creation and its persistence across separate Vercel Function invocations remain to be tested on a dedicated QA identity. The clean demo branch was deliberately left with all 30 profiles available and no test decisions.
 
 ### Browser and platform security
 
@@ -60,4 +62,4 @@ The private Coy OTP, add-crush, email verification, invite and extra-slots walkt
 
 ## Release decision
 
-Part B has a successful protected Preview deployment and Neon-backed GET smoke checks. Hosted swipe acceptance, live rate-limit verification and Part A remain open. Do not merge PR #8 or expose an unrestricted public interactive demo until the remaining release gates are closed.
+Part B has a successful protected Preview deployment, Neon-backed GET smoke checks, hosted swipe validation/error-handling checks, and a verified edge HTTP 429 threshold. Brand-new reciprocal-match creation/persistence, physical device and assistive-technology checks, and Part A remain open. Do not merge PR #8 or expose an unrestricted public interactive demo until the remaining release gates are closed.

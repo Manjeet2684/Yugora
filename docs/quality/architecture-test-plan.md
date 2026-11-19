@@ -47,7 +47,8 @@
 - [x] Apply both migrations and verify the idempotent seed (30 profiles, eight incoming likes, zero matches).
 - [x] Smoke-check protected `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches).
 - [x] Verify HTTPS, HSTS, private/no-store cache behavior and baseline response security headers.
-- [ ] Exercise hosted `POST /swipe`, reciprocal-match creation and persistence across separate Function invocations.
-- [ ] Verify the Firewall produces HTTP 429 at the configured threshold.
+- [x] Exercise hosted `POST /swipe` idempotent retries, conflicting decisions and request validation errors (400/404/409/413/415).
+- [x] Verify the Firewall produces HTTP 429 on request 61 after 60 requests per IP per 60 seconds.
+- [ ] Exercise new reciprocal-match creation and persistence across separate Function invocations on a dedicated QA identity.
 - [ ] Complete manual assistive-technology and physical-device checks.
 - [ ] Complete the private Coy walkthrough and validate Part A recommendations.
