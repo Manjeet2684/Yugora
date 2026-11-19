@@ -1,5 +1,4 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
-import { NextResponse } from "next/server";
 import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient } from "../../../../src/infrastructure/auth/neon-auth-context.js";
 
 export const runtime = "nodejs";
@@ -7,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 function json(payload: unknown, status = 200): Response {
-  return NextResponse.json(payload, { status, headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+  return new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
 function sameOrigin(request: Request): boolean {

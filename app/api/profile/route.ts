@@ -1,6 +1,5 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { randomUUID } from "node:crypto";
-import { NextResponse } from "next/server";
 import { createPlaceholderProfilePhotoUrl } from "../../../src/shared/profile-placeholder-photo.js";
 import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient } from "../../../src/infrastructure/auth/neon-auth-context.js";
 
@@ -12,7 +11,7 @@ const HEADERS = { "Cache-Control": "private, no-store", "X-Content-Type-Options"
 const INCLUDE_INTERESTS = { interests: { include: { interest: true }, orderBy: { position: "asc" as const } } };
 
 function json(body: unknown, status = 200): Response {
-  return NextResponse.json(body, { status, headers: HEADERS });
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...HEADERS } });
 }
 
 function sameOrigin(request: Request): boolean {

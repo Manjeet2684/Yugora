@@ -1,6 +1,5 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 // First-party proxy: keeps the Neon Auth session cookie on the YUGORA origin.
-import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +18,7 @@ function localDemoEnabled(): boolean {
 }
 
 function json(payload: unknown, status = 200): Response {
-  return NextResponse.json(payload, { status, headers: { "Cache-Control": "private, no-store" } });
+  return new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "private, no-store" } });
 }
 
 function isSameOrigin(request: Request): boolean {
