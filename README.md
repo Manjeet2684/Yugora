@@ -18,6 +18,7 @@ The demo contains 30 fictional profiles and eight seeded incoming likes. Email s
 
 - One profile at a time, with touch/pointer drag on mobile and Like/Pass controls on desktop.
 - A decision is saved before its card leaves the deck. Failed requests preserve the active profile.
+- The one-click Preview assignment identity sees only the 30 fictional seeded profiles; ordinary signed-in members can discover other active member profiles.
 - A profile already swiped on is excluded for the current round. When the 30-profile round is exhausted, the user can start another round; only their `PASS` decisions are cleared. `LIKE` decisions and persisted matches remain intact.
 - Profiles are created and edited by their owner. Hobbies can be picked from suggestions or entered as custom text; up to ten are stored per profile.
 - A match requires two persisted, opposite-direction LIKE decisions.
@@ -109,6 +110,8 @@ The Vercel project remains SSO-protected. The YUGORA_PUBLIC_DEMO_MODE=true switc
 See [security and release review](docs/SECURITY-REVIEW.md) for the remaining deployment gates.
 
 ## Assignment notes
+
+See the [submission and reviewer checklist](docs/SUBMISSION-CHECKLIST.md) for the exact demo walkthrough, requirement mapping and the Part A items still needing manual validation.
 
 Part A's two preliminary Coy feature recommendations and their evidence boundary are in [Part A recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md). The private Coy walkthrough still needs to be completed before those recommendations are presented as personally validated.
 
