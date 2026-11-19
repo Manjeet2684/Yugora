@@ -87,10 +87,6 @@ npm audit --audit-level=high
 
 For deployment, `npm run vercel-build` applies migrations, runs the idempotent seed and builds the Next.js application.
 
-## Coy product recommendations
-
-The two product recommendations prepared for the Coy assignment are in [Part A recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md).
-
 ---
 
 <p align="center"><strong>YUGORA</strong><br/><em>Two sides. One genuine connection.</em></p>
