@@ -168,7 +168,6 @@ kbd { display: inline-grid; min-width: 19px; height: 19px; place-items: center; 
 .match-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .match-confetti span { position: absolute; top: 13%; left: 11%; width: 6px; height: 13px; border-radius: 3px; background: #d3a5bc; transform: rotate(26deg); opacity: .75; }
 .match-confetti span:nth-child(2) { top: 23%; left: 86%; background: #d6c096; transform: rotate(-30deg); }.match-confetti span:nth-child(3) { top: 52%; left: 7%; background: #c9a9c3; transform: rotate(45deg); }.match-confetti span:nth-child(4) { top: 59%; left: 91%; background: #d8b4a1; transform: rotate(-18deg); }.match-confetti span:nth-child(5) { top: 34%; left: 92%; background: #c58fa9; transform: rotate(60deg); }
-.home-blank { min-height: 100svh; }
 
 @media (max-width: 1180px) {
   .sidebar { width: 220px; padding-inline: 20px; }
@@ -214,7 +213,6 @@ kbd { display: inline-grid; min-width: 19px; height: 19px; place-items: center; 
   .empty-state { min-height: 480px; padding: 20px; }.empty-state h2 { font-size: 34px; }
   .matches-heading { align-items: flex-end; }.matches-count { font-size: 23px; }.matches-grid { gap: 14px; }
   .match-card { grid-template-columns: 37% 1fr; min-height: 245px; }.match-card-photo { min-height: 245px; }.match-card-body { padding: 16px 13px 13px; }.match-card-body h2 { font-size: 20px; }.match-card-body > p { font-size: 9px; }
-  .home-blank { min-height: calc(100svh - 155px); }
 }
 @media (max-width: 370px) {
   .app-main { padding-inline: 14px; }.mobile-topbar { margin-inline: -14px; padding-inline: 14px; }.topbar-caption { display: none; }
