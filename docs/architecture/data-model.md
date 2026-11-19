@@ -2,7 +2,7 @@
 
 ## Tables
 
-- **User**: identity record for the single demo user and each mock profile owner. No external authentication is introduced.
+- **User**: identity record keyed by the verified Neon Auth user ID, plus each fictional profile owner. The browser does not choose this identifier.
 - **Profile**: one public discovery profile per user. `ownerUserId` is unique. Ages are constrained to 18+ by a PostgreSQL CHECK constraint.
 - **Interest**: normalized, unique interest labels.
 - **ProfileInterest**: composite-key join table for the many-to-many Profile/Interest relationship. `position` preserves display order.
@@ -21,6 +21,12 @@
 8. Persisted swipe actor, target, and direction fields are immutable; deleting either supporting swipe automatically removes the pair's Match, including during account/profile-owner cleanup.
 
 The CHECK constraints and PL/pgSQL trigger functions are authored in SQL migrations because Prisma's schema DSL does not express these database-level predicates and trigger bodies. Preserve them when editing or regenerating migrations.
+
+## Authentication and user profile
+
+Neon Auth manages email OTP sign-in and its session records in the separate `neon_auth` schema. YUGORA resolves the authenticated user from the first-party HttpOnly session cookie on the server, then creates or resolves the matching application `User` row. Each signed-in user can own one editable `Profile`; interests are stored through the normalized Interest/ProfileInterest relation. The email address is not included in public discovery DTOs.
+
+A local/CI-only identity adapter is enabled only by `YUGORA_TEST_IDENTITY=demo` or development mode when Neon Auth is not configured. It is not a production fallback.
 
 ## Seed data
 

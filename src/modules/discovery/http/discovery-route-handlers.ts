@@ -94,6 +94,9 @@ function hasInfrastructureUnavailableCode(error: unknown): boolean {
 }
 
 function mapApplicationError(error: unknown): Response {
+  if (error && typeof error === "object" && (error as { name?: unknown }).name === "AuthenticationRequiredError") {
+    return errorResponse(401, "AUTHENTICATION_REQUIRED", "Sign in with your email before using YUGORA.");
+  }
   if (error instanceof InvalidSwipeCommandError) {
     return errorResponse(400, error.code, error.message);
   }

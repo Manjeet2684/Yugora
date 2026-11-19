@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
-import YugoraApp from "./components/yugora-app.js";
+import YugoraShell from "./components/yugora-shell.js";
 
 export default function HomePage() {
-  return <YugoraApp />;
+  return <YugoraShell />;
 }

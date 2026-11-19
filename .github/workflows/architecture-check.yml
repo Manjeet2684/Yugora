@@ -31,6 +31,7 @@ jobs:
       DATABASE_URL: postgresql://yugora:yugora@localhost:5432/yugora?schema=public
       DATABASE_URL_UNPOOLED: postgresql://yugora:yugora@localhost:5432/yugora?schema=public
       DEMO_USER_ID: demo-user
+      YUGORA_TEST_IDENTITY: demo
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - name: Check out repository

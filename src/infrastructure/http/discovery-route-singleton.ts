@@ -1,16 +1,15 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
-import { createPersistentDiscoveryApplication } from "../database/prisma-discovery.application.js";
+import { createPrismaDiscoveryApplication } from "../../modules/discovery/infrastructure/persistence/prisma/create-prisma-discovery-application.js";
 import { createDiscoveryHttpHandlers } from "../../modules/discovery/http/discovery-route-handlers.js";
+import { NeonAuthCurrentUserAdapter } from "../auth/neon-current-user.adapter.js";
+import { getSharedPrismaClient } from "../auth/neon-auth-context.js";
 
-const globalForYugora = globalThis as typeof globalThis & {
-  __yugoraDiscoveryHttpHandlers?: ReturnType<typeof createDiscoveryHttpHandlers>;
-};
-
-/** Reuse the Prisma client and application across warm Node.js route invocations. */
-export function getDiscoveryHttpHandlers() {
-  if (!globalForYugora.__yugoraDiscoveryHttpHandlers) {
-    const application = createPersistentDiscoveryApplication();
-    globalForYugora.__yugoraDiscoveryHttpHandlers = createDiscoveryHttpHandlers(application);
-  }
-  return globalForYugora.__yugoraDiscoveryHttpHandlers;
+/** Build a request-scoped identity adapter over the process-wide Prisma pool. */
+export function getDiscoveryHttpHandlers(request: Request) {
+  const prisma = getSharedPrismaClient();
+  const application = createPrismaDiscoveryApplication({
+    prisma,
+    currentUser: new NeonAuthCurrentUserAdapter(prisma, request),
+  });
+  return createDiscoveryHttpHandlers(application);
 }

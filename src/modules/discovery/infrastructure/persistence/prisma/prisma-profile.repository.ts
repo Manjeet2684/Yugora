@@ -23,6 +23,7 @@ export class PrismaProfileRepository implements ProfileRepositoryPort {
       },
       include: profileWithInterests,
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      take: 30,
     });
     return rows.map(toDomainProfile);
   }

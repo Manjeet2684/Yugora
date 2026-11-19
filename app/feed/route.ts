@@ -5,6 +5,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export function GET(_request: Request): Promise<Response> {
-  return getDiscoveryHttpHandlers().getFeed();
+export function GET(request: Request): Promise<Response> {
+  return getDiscoveryHttpHandlers(request).getFeed();
 }
