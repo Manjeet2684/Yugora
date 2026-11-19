@@ -1,6 +1,6 @@
 # YUGORA HTTP API
 
-The Gate 3 API is implemented as Next.js App Router-compatible Route Handlers at the exact assignment paths. It uses the existing application use cases and the configured single demo user; the browser never chooses the acting user ID.
+The API is implemented as Next.js App Router Route Handlers. It uses the existing application use cases and the configured single demo user; the browser never chooses the acting user ID.
 
 All user-specific responses, including errors, use `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff`.
 
