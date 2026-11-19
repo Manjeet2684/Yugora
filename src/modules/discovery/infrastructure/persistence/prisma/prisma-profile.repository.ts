@@ -2,6 +2,7 @@
 import type { ProfileRepositoryPort } from "../../../application/ports/profile-repository.port.js";
 import type { Profile } from "../../../domain/entities/profile.js";
 import type { ProfileId, UserId } from "../../../domain/values/identifiers.js";
+import { isPublicDemoMode } from "../../../../../infrastructure/auth/demo-mode.js";
 import { toDomainProfile } from "./prisma-mappers.js";
 import { profileWithInterests, type PrismaExecutor } from "./prisma-types.js";
 
@@ -9,10 +10,16 @@ export class PrismaProfileRepository implements ProfileRepositoryPort {
   constructor(private readonly db: PrismaExecutor) {}
 
   async listEligibleForViewer(viewerUserId: UserId): Promise<readonly Profile[]> {
+    const isSharedAssignmentViewer = isPublicDemoMode()
+      && viewerUserId === (process.env.DEMO_USER_ID?.trim() || "demo-user");
+    const ownerUserId = isSharedAssignmentViewer
+      ? { not: viewerUserId, startsWith: "yugora-user-" }
+      : { not: viewerUserId };
+
     const rows = await this.db.profile.findMany({
       where: {
         isActive: true,
-        ownerUserId: { not: viewerUserId },
+        ownerUserId,
         owner: {
           is: {
             swipesReceived: {
