@@ -26,7 +26,7 @@ The CHECK constraints and PL/pgSQL trigger functions are authored in SQL migrati
 
 Neon Auth manages email OTP sign-in and its session records in the separate `neon_auth` schema. YUGORA resolves the authenticated user from the first-party HttpOnly session cookie on the server, then creates or resolves the matching application `User` row. Each signed-in user can own one editable `Profile`; interests are stored through the normalized Interest/ProfileInterest relation. The email address is not included in public discovery DTOs.
 
-A local/CI-only identity adapter is enabled only by `YUGORA_TEST_IDENTITY=demo` or development mode when Neon Auth is not configured. It is not a production fallback.
+Local development can use the seeded demo identity when Neon Auth is not configured. CI browser tests must explicitly set `YUGORA_TEST_IDENTITY=demo` and `CI=true`; the test identity is rejected by a Vercel Production runtime.
 
 ## Seed data
 
