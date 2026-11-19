@@ -40,7 +40,7 @@ async function apiRequest<T>(url: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
-function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart" | "x" | "map" | "spark" | "arrow" | "refresh" | "close" | "check" | "calendar" | "loader"; size?: number }) {
+function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart" | "x" | "map" | "spark" | "arrow" | "refresh" | "close" | "check" | "calendar"; size?: number }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -55,7 +55,6 @@ function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart
     close: <><path d="m6 6 12 12M18 6 6 18"/></>,
     check: <path d="m5 12 4 4L19 6"/>,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,
-    loader: <><path d="M21 12a9 9 0 1 1-6.2-8.56"/></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }
