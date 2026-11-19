@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import type { PrismaClient } from "../../generated/prisma/client.js";
-import { isPublicDemoMode } from "./demo-mode.js";
+import { isLocalOrTestDemoMode, isPublicDemoMode } from "./demo-mode.js";
 import { createPrismaClient } from "../database/prisma-client.js";
 
 export interface AuthenticatedUser {
@@ -41,7 +41,7 @@ export async function getAuthenticatedUser(request: Request): Promise<Authentica
   const baseUrl = process.env.NEON_AUTH_BASE_URL?.trim();
   if (!baseUrl) {
     // Local/CI fixtures and the explicitly enabled Preview assignment demo only.
-    if (process.env.NODE_ENV === "development" || process.env.YUGORA_TEST_IDENTITY === "demo" || isPublicDemoMode()) {
+    if (isLocalOrTestDemoMode() || isPublicDemoMode()) {
       return publicDemoUser();
     }
     return null;
