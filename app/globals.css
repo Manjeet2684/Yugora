@@ -554,3 +554,15 @@ kbd { display: inline-grid; min-width: 19px; height: 19px; place-items: center; 
   .account-toolbar > div { width:100%; justify-content:flex-end; }
 }
 @media (prefers-reduced-motion:reduce) { .hero-glow,.auth-card,.auth-backdrop { animation:none!important; } }
+
+
+/* Assignment reviewer entry: a clear guest path that does not compete with email sign-in. */
+.demo-entry-button { min-height:46px; border-color:rgba(100,73,96,.25); background:rgba(255,250,247,.88); color:#6c526b; }
+.demo-entry-button:hover:not(:disabled) { border-color:#b985a0; background:#fff; }
+.demo-entry-note { margin:14px 0 0; color:#8d7e8d; font-size:10px; letter-spacing:.02em; }
+.demo-modal-entry { display:block; margin:15px auto 0; color:#876a80; font-size:10px; }
+.demo-entry-button:disabled,.demo-modal-entry:disabled { opacity:.55; cursor:wait; }
+@media (max-width:600px) {
+  .demo-entry-button { width:100%; justify-content:center; }
+  .demo-entry-note { max-width:310px; line-height:1.6; }
+}
