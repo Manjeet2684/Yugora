@@ -24,7 +24,7 @@ The core privacy rule is enforced in the domain, repositories and database. A ma
 
 ## Protected Preview — verified 19 November 2026
 
-The current deployment commit `177a47c37ef10a82245e75c8f4093310c94dcca2` is deployed to the [protected YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/).
+The current deployment commit `414338ce4639b0fe440aa602f37a0be062713b5f` is deployed and Ready on the [protected YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/).
 
 - The Vercel project remains SSO-protected; `live` remains false and no Production environment variables are configured.
 - `YUGORA_PUBLIC_DEMO_MODE=true` is a plain, branch-scoped Preview variable for `feature/postgres-production-hardening`. The application guard enables it only outside Production or on a Vercel Preview runtime; Production runtimes ignore the flag. The assignment entry is intentionally a shared single-user demo, not a production identity model.
@@ -33,7 +33,9 @@ The current deployment commit `177a47c37ef10a82245e75c8f4093310c94dcca2` is depl
 - The Neon read-write endpoint has transaction pooling enabled. Both connection URLs use explicit `sslmode=verify-full`.
 - Both PostgreSQL migrations applied successfully. The idempotent seed produced 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows, zero demo-user decisions and zero Match rows. The earlier `yugora-preview` branch retains its separate 30 swipe decisions and three mutual matches; it was not reset or deleted.
 - Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` with 30 public profiles, and `GET /matches` with zero matches. Matches responses have private/no-store cache headers; deployed responses include HSTS and baseline security headers.
-- The fresh Preview build completed successfully. The latest runtime-log query returned no entries.
+- The final Preview build completed successfully from commit `414338ce4639b0fe440aa602f37a0be062713b5f`. Hosted smoke checks returned HTTP 200 from `/`, `/api/profile`, `/feed` and `/matches`. The public feed returned exactly 30 seeded profile IDs, with no member-owned profiles; the guest profile loaded and Matches returned zero rows.
+- A read-only Neon count confirmed 30 seeded profiles, 120 seeded interest links, eight incoming demo LIKE rows, zero decisions by the shared demo identity and zero demo matches. The database retains a separate member-owned profile, but the assignment demo query does not expose it.
+- The latest GitHub quality-gate run [44579387456](https://github.com/Manjeet2684/Yugora/actions/runs/44579387456) passed. This includes 20 Chromium journeys, the one-click reviewer entry, demo-mode production guards, the PostgreSQL demo-feed isolation regression, and `npm audit --audit-level=high` with zero vulnerabilities.
 
 The Neon Marketplace installation is present, and the PostgreSQL project was created from the Vercel Marketplace path. Vercel's integration-configuration read-back did not expose a connector-managed project association; the working database connection was completed with branch-scoped Vercel environment variables. Do not describe the connector configuration object itself as project-connected.
 
