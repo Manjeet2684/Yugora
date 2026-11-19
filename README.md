@@ -2,116 +2,93 @@
   <img src="docs/assets/yugora-cover.svg" alt="YUGORA — Two sides. One genuine connection." width="100%" />
 </div>
 
-<h3 align="center">A connection, only when it is mutual.</h3>
+<h3 align="center">A connection, only when it's mutual.</h3>
 
-<p align="center">A privacy-first discovery experience built around one product rule: one-sided interest stays private; only reciprocal interest becomes a match.</p>
+<p align="center">A social discovery experience where interest stays private until it is returned.</p>
 
----
+## About
 
-## Product scope
+YUGORA is a privacy-first social discovery app. People create a profile, discover others one at a time, and express interest privately. A connection appears only when both people Like each other.
 
-YUGORA is a standalone implementation of the Coy SDE Intern assignment. It has an editorial **Home** experience, passwordless email sign-in, an editable personal profile, a functional **Discover** experience and a **Matches** view containing confirmed mutual matches only.
+The demo is seeded with 30 fictional profiles, including eight incoming Likes, so the mutual-match flow can be explored immediately.
 
-The demo contains 30 fictional profiles and eight seeded incoming likes. Email sign-in is available for the full product experience. For assignment review, the protected Preview also offers a one-click **Explore assignment demo** path that uses the server-configured single demo identity, so reviewers do not need to register or receive an OTP. This Preview-only mode is ignored by Production. User identity is resolved on the server; no user ID is accepted from the browser. It does not use Coy production code, user data or private services.
+## Features
 
-## Core behavior
+- **Profiles:** email OTP sign-in, profile setup, editable bio, location, and interests.
+- **Discover:** one profile at a time, with mobile drag gestures and desktop Like/Pass controls.
+- **Private decisions:** a one-sided Like is never revealed to the other person.
+- **Mutual matches:** a match is created only after both participants have persisted a Like.
+- **Matches:** view confirmed mutual connections.
+- **New round:** revisit passed profiles without clearing Likes or existing matches.
 
-- One profile at a time, with touch/pointer drag on mobile and Like/Pass controls on desktop.
-- A decision is saved before its card leaves the deck. Failed requests preserve the active profile.
-- The one-click Preview assignment identity sees only the 30 fictional seeded profiles; ordinary signed-in members can discover other active member profiles.
-- A profile already swiped on is excluded for the current round. When the 30-profile round is exhausted, the user can start another round; only their `PASS` decisions are cleared. `LIKE` decisions and persisted matches remain intact.
-- Profiles are created and edited by their owner. Hobbies can be picked from suggestions or entered as custom text; up to ten are stored per profile.
-- A match requires two persisted, opposite-direction LIKE decisions.
-- Incoming one-sided interest is never included in feed or match DTOs.
-- Swipes and matches are stored in PostgreSQL and survive reloads.
-- Match celebration is shown only after the server confirms a mutual match.
+## Tech stack
 
-## Architecture
+- Next.js App Router, React and TypeScript
+- Node.js route handlers
+- PostgreSQL with Prisma ORM
+- Neon Auth email OTP
+- Playwright for browser tests
 
-<img src="docs/assets/architecture.svg" alt="YUGORA Ports and Adapters architecture" width="100%" />
+## How it works
 
-The domain owns the mutual-match rule. Application use cases coordinate the workflow through ports. Next.js route handlers are inbound adapters; Prisma/PostgreSQL repositories are outbound adapters.
+The application keeps product rules separate from transport and persistence:
 
-| Layer | Responsibility |
-|---|---|
-| Domain | Profile, directed Swipe, canonical Match, matching policy |
-| Application | Feed, swipe and match use cases; repository and Unit of Work ports |
-| HTTP | Request validation, stable error mapping and private response headers |
-| Persistence | Prisma 7 repositories, PostgreSQL migrations, transaction-scoped pair locks |
-| Identity | Neon Auth managed Better Auth, first-party HttpOnly session proxy and server-resolved user IDs |
-| Profile | Owner-scoped profile setup/editing and normalized, reusable custom interests |
-| UI | Public landing page, Home vision, Discover card, gestures, profile editor, match celebration and Matches view |
+- **Domain:** directed swipe decisions and the reciprocal-Like matching rule.
+- **Application:** feed, swipe and matches use cases.
+- **HTTP:** validates requests and returns explicit public response DTOs.
+- **Persistence:** Prisma repositories and PostgreSQL transactions enforce durable decisions and match integrity.
+- **UI:** renders profiles and server-confirmed outcomes; a card advances only after a decision is saved.
 
-### Matching data model
+<img src="docs/assets/architecture.svg" alt="YUGORA application architecture" width="100%" />
 
-<img src="docs/assets/er-diagram.svg" alt="YUGORA relational data model" width="100%" />
+The core data model uses `User`, `Profile`, `Interest`, `ProfileInterest`, `Swipe` and `Match`. One directed `Swipe` record represents one person's decision about another; incoming interest is not exposed as a separate profile field.
 
-There is no separate incoming-like table. An incoming LIKE is a directed Swipe whose target is the demo user. The viewer's feed is filtered only by decisions authored by that viewer.
+<img src="docs/assets/er-diagram.svg" alt="YUGORA database entity relationship diagram" width="100%" />
 
-Important database protections include unique directed decisions, self-swipe and age constraints, canonical match-pair uniqueness, reciprocal-LIKE triggers, immutable swipe decisions and automatic removal of matches whose supporting swipe is deleted.
-
-## HTTP API
+## API
 
 | Method | Route | Purpose |
 |---|---|---|
-| `GET` | `/feed` | Eligible public profiles; excludes viewer-authored decisions |
-| `POST` | `/swipe` | Persists `LIKE` or `PASS`; returns a confirmed match when mutual |
-| `GET` | `/matches` | Returns persisted mutual matches only |
-| `GET` / `PUT` | `/api/profile` | Loads or updates the signed-in user's profile |
-| `POST` | `/api/feed/reset` | Starts a new round by clearing only this user's `PASS` decisions |
-| `GET` / `POST` | `/api/auth/*` | First-party proxy for Neon Auth email OTP and session operations |
+| `GET` | `/feed` | Load eligible profiles |
+| `POST` | `/swipe` | Save a Like or Pass and return a confirmed match when mutual |
+| `GET` | `/matches` | Load mutual matches |
+| `GET` / `PUT` | `/api/profile` | Load or update the signed-in user's profile |
+| `POST` | `/api/feed/reset` | Start a new round by clearing only Pass decisions |
 
-The swipe request accepts only `profileId` and `direction`. The acting user is resolved server-side.
+The swipe API accepts only `profileId` and `direction`. The acting user is resolved on the server.
 
-See [API contracts](docs/api/contracts.md), [data model](docs/architecture/data-model.md), and the [architecture decisions](docs/architecture/decisions/).
+See the [API contract](docs/api/contracts.md) and [data model](docs/architecture/data-model.md).
 
 ## Run locally
 
-**Requirements:** Node.js 22.12 or newer and PostgreSQL 16 or compatible PostgreSQL.
+**Requirements:** Node.js 22.12+ and PostgreSQL 16+.
 
 1. Install dependencies: `npm ci`.
 2. Copy `.env.example` to `.env`.
-3. Set `DATABASE_URL` to a pooled PostgreSQL URL (or a local direct URL for development).
-4. Set `DATABASE_URL_UNPOOLED` to a direct, unpooled PostgreSQL URL for migrations. `DIRECT_URL` is supported as a legacy alias.
-5. For local-only demo mode, set `YUGORA_TEST_IDENTITY=demo` and `DEMO_USER_ID=demo-user`. Never set `YUGORA_TEST_IDENTITY=demo` in a deployed environment.
-6. To use real email sign-in locally, set `NEON_AUTH_BASE_URL` to the Auth URL for your Neon branch and add your local origin to its trusted origins.
-7. For the deployed Preview, Neon Auth is provisioned on the same dedicated `yugora-demo-ready` Neon branch. The Vercel Preview variable `NEON_AUTH_BASE_URL` is scoped only to `feature/postgres-production-hardening`.
-8. Run `npm run db:deploy`, then `npm run db:seed`.
-9. Start the app with `npm run dev`.
+3. Set `DATABASE_URL` to your PostgreSQL connection URL.
+4. Set `DATABASE_URL_UNPOOLED` to a direct, unpooled URL for migrations.
+5. Apply the schema and load demo data:
+   ```bash
+   npm run db:deploy
+   npm run db:seed
+   ```
+6. Start the app: `npm run dev`.
 
-The seed is idempotent and creates the 30 fictional profiles and eight incoming demo likes. Real users create their own `Profile` after email sign-in; the email address is stored by Neon Auth and is never part of public profile DTOs.
+For real email sign-in, configure `NEON_AUTH_BASE_URL` for your Neon Auth project and add your local origin to its trusted origins. Local development without Neon Auth uses the local demo identity.
 
-## Verification
+## Quality checks
 
-- `npm run check` — schema validation, TypeScript, configuration, architecture, PostgreSQL persistence, HTTP integration and UI logic tests.
-- `npm run test:e2e` — Chromium journeys against the production Next.js server.
-- `npm run vercel-build` — deploy migrations, run the idempotent seed and build Next.js in deployment order.
-- `npm audit --audit-level=high` — dependency audit.
+```bash
+npm run check
+npm run test:e2e
+npm audit --audit-level=high
+```
 
-The current workflow is [YUGORA quality gates](.github/workflows/architecture-check.yml). The [quality plan](docs/quality/architecture-test-plan.md) lists behavior and release checks.
+For deployment, `npm run vercel-build` applies migrations, runs the idempotent seed and builds the Next.js application.
 
-## Protected Preview
+## Coy product recommendations
 
-The current candidate is deployed to a protected Vercel Preview. On the landing page, choose **Explore assignment demo** for the no-account evaluation flow, or **Get started** to test real email OTP sign-in:
-
-- [Open the YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/)
-- Git branch: `feature/postgres-production-hardening`
-- Revision: `414338ce4639b0fe440aa602f37a0be062713b5f`
-- Neon branch: `yugora-demo-ready` in Singapore (`aws-ap-southeast-1`)
-
-Vercel environment variables are scoped to Preview and this Git branch only: sensitive pooled `DATABASE_URL` for runtime traffic, sensitive direct `DATABASE_URL_UNPOOLED` for Prisma migrations, and `DEMO_USER_ID` for the assignment demo identity. The database branch uses transaction pooling and explicit `sslmode=verify-full` for both URLs. The earlier `yugora-preview` branch is preserved separately with the prior interaction history.
-
-Both PostgreSQL migrations have applied successfully. The idempotent seed created 30 fictional Profile rows with 120 ProfileInterest links, eight incoming Swipe LIKE rows, and zero demo-user decisions or matches. The public assignment feed is scoped to those 30 seeded profile owners; member-owned profiles are not included in the shared reviewer deck. The Neon default branch remains separate and has no YUGORA application tables.
-
-Final Preview smoke checks returned HTTP 200 from `/`, `/api/profile`, `/feed` and `/matches`. The shared guest profile loads, `/feed` returns exactly 30 seeded profiles (and no member-owned profiles), and `/matches` starts empty. Feed and Matches use private/no-store caching; deployed responses include HSTS and baseline security headers. Hosted `POST /swipe` acceptance checks passed for idempotent retries, conflicting decisions, unknown profiles, client actor overrides, unsupported media type, malformed JSON and oversized bodies. The configured edge rate limit was exercised: 60 requests returned 200 and request 61 returned 429. A brand-new reciprocal-match creation and persistence across separate Function invocations remain to be verified on a fresh QA identity.
-
-The Vercel project remains SSO-protected. The YUGORA_PUBLIC_DEMO_MODE=true switch is configured only for Preview on this feature branch and is ignored by Production runtimes. The shared demo identity is for assignment evaluation only; its persisted swipe decisions and matches are shared by people using that demo. No Production database variables have been configured and no Production deployment has been promoted. The Preview uses Neon Auth email OTP on the dedicated Neon branch, and application identity comes from the HttpOnly auth session. Neon recommends a dedicated SMTP provider for production email delivery; the branch's shared sender is suitable for development/Preview testing only.
-
-See [security and release review](docs/SECURITY-REVIEW.md) for the remaining deployment gates.
-
-## Assignment notes
-
-Part A's two preliminary Coy feature recommendations and their evidence boundary are in [Part A recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md). The private Coy walkthrough still needs to be completed before those recommendations are presented as personally validated.
+The two product recommendations prepared for the Coy assignment are in [Part A recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md).
 
 ---
 
