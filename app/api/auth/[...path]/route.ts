@@ -60,7 +60,13 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
   const incomingUrl = new URL(request.url);
   const destination = `${baseUrl.replace(/\/+$/u, "")}/${routePath}${incomingUrl.search}`;
   const headers = new Headers(request.headers);
-  headers.delete("host"); headers.delete("connection"); headers.delete("content-length");
+  headers.delete("host");
+  headers.delete("connection");
+  headers.delete("content-length");
+  headers.delete("x-forwarded-host");
+  headers.delete("x-forwarded-proto");
+  headers.delete("x-forwarded-port");
+  headers.delete("forwarded");
   headers.set("accept", "application/json");
   headers.set("origin", incomingUrl.origin);
   headers.set("referer", `${incomingUrl.origin}/`);
