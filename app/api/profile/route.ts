@@ -152,8 +152,8 @@ export async function PUT(request: Request): Promise<Response> {
 
     if (!profile) return json({ message: "Your profile could not be saved." }, 500);
     return json({ profile: mapProfile(profile, context.user.email) });
-  } catch (error) {
-    console.error("YUGORA profile save failed.", error);
+  } catch {
+    console.error("YUGORA profile save failed.");
     return json({ message: "Your profile could not be saved. Please try again." }, 503);
   }
 }
