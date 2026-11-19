@@ -81,11 +81,22 @@ The seed is idempotent and creates the 30 fictional profiles and eight incoming 
 
 The current workflow is [YUGORA quality gates](.github/workflows/architecture-check.yml). The [quality plan](docs/quality/architecture-test-plan.md) lists behavior and release checks.
 
-## Deployment boundary
+## Protected Preview
 
-The assignment uses one shared demo identity; this is not a production multi-user authentication model. Keep interactive Preview deployments protected by Vercel SSO. Do not expose the mutable shared demo as an unrestricted public application.
+The current candidate is deployed to a protected Vercel Preview:
 
-The Vercel project and API rate-limit rule are configured. Neon connection and protected Preview acceptance remain outstanding. The production migration configuration requires a direct, unpooled database URL and will fail closed if one is missing in a deployed environment.
+- [Open the YUGORA Preview](https://yugora-git-feature-postgres-production-hardening-manjeet12.vercel.app/)
+- Git branch: `feature/postgres-production-hardening`
+- Revision: `7c8da3e633f274d1dcae03bff7fbdb9f9279532c`
+- Neon branch: `yugora-preview` in Singapore (`aws-ap-southeast-1`)
+
+Vercel environment variables are scoped to Preview and this Git branch only: sensitive pooled `DATABASE_URL` for runtime traffic, sensitive direct `DATABASE_URL_UNPOOLED` for Prisma migrations, and `DEMO_USER_ID` for the assignment demo identity. The database branch uses transaction pooling and explicit `sslmode=verify-full` for both URLs.
+
+Both PostgreSQL migrations have applied successfully. The idempotent seed created 30 Profile rows, 31 User rows (including the demo identity), eight incoming Swipe LIKE rows and zero Match rows. The Neon default branch remains separate and has no YUGORA application tables.
+
+Protected Preview smoke checks returned 200 from `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches). The Matches response has private/no-store caching; deployed responses include HSTS and baseline security headers. Hosted `POST /swipe`, persistence across separate Function invocations, and an actual edge HTTP 429 response have not yet been verified; the PostgreSQL/HTTP integration and Chromium CI suites cover the application behavior.
+
+The Vercel project remains SSO-protected. No Production database variables have been configured and no Production deployment has been promoted. The app deliberately uses one shared demo identity, so do not expose it as an unrestricted public multi-user product.
 
 See [security and release review](docs/SECURITY-REVIEW.md) for the remaining deployment gates.
 

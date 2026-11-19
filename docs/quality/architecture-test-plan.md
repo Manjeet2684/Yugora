@@ -40,11 +40,14 @@
 
 ## Hosted release checks
 
-- [ ] Connect Neon to the Vercel project with unprefixed pooled and direct URL variables.
-- [ ] Enable Preview database branching and retain Vercel SSO protection.
-- [ ] Deploy the candidate branch to a protected Preview.
-- [ ] Verify migrations, idempotent seed and persistence across separate Function invocations.
+- [x] Connect a Neon PostgreSQL project and create a dedicated Preview branch.
+- [x] Configure branch-scoped pooled runtime and direct migration URLs; keep Production variables absent.
+- [x] Keep Vercel SSO protection enabled.
+- [x] Deploy the candidate branch to a protected Preview.
+- [x] Apply both migrations and verify the idempotent seed (30 profiles, eight incoming likes, zero matches).
+- [x] Smoke-check protected `GET /`, `GET /feed` (30 profiles) and `GET /matches` (zero matches).
+- [x] Verify HTTPS, HSTS, private/no-store cache behavior and baseline response security headers.
+- [ ] Exercise hosted `POST /swipe`, reciprocal-match creation and persistence across separate Function invocations.
 - [ ] Verify the Firewall produces HTTP 429 at the configured threshold.
-- [ ] Verify HTTPS, response headers and monitoring on the deployed Preview.
 - [ ] Complete manual assistive-technology and physical-device checks.
 - [ ] Complete the private Coy walkthrough and validate Part A recommendations.
