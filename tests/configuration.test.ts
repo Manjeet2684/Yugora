@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveMigrationDatabaseUrl } from "../prisma.config.js";
-import { isPublicDemoMode } from "../src/infrastructure/auth/demo-mode.js";
+import { isLocalOrTestDemoMode, isPublicDemoMode } from "../src/infrastructure/auth/demo-mode.js";
 
 const LOCAL_URL = "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public";
 
@@ -96,5 +96,40 @@ test("public assignment demo remains disabled unless explicitly enabled", () => 
     YUGORA_PUBLIC_DEMO_MODE: "false",
     NODE_ENV: "production",
     VERCEL_ENV: "preview",
+  }), false);
+});
+
+test("local development may use the demo identity without an extra flag", () => {
+  assert.equal(isLocalOrTestDemoMode({ NODE_ENV: "development" }), true);
+});
+
+test("an explicitly marked CI browser run may use the demo identity", () => {
+  assert.equal(isLocalOrTestDemoMode({
+    NODE_ENV: "production",
+    CI: "true",
+    YUGORA_TEST_IDENTITY: "demo",
+  }), true);
+});
+
+test("Vercel Production rejects the test identity even when CI is true", () => {
+  assert.equal(isLocalOrTestDemoMode({
+    NODE_ENV: "production",
+    CI: "true",
+    VERCEL_ENV: "production",
+    YUGORA_TEST_IDENTITY: "demo",
+  }), false);
+});
+
+test("a production runtime outside CI rejects the test identity", () => {
+  assert.equal(isLocalOrTestDemoMode({
+    NODE_ENV: "production",
+    YUGORA_TEST_IDENTITY: "demo",
+  }), false);
+});
+
+test("CI without the explicit test identity does not create a demo session", () => {
+  assert.equal(isLocalOrTestDemoMode({
+    NODE_ENV: "production",
+    CI: "true",
   }), false);
 });
