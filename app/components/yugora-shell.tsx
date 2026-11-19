@@ -203,6 +203,22 @@ export default function YugoraShell() {
     } finally { setAuthBusy(false); }
   };
 
+  const enterDemo = async () => {
+    setAuthBusy(true);
+    setAuthError(null);
+    setNotice(null);
+    try {
+      await loadAccount({ id: "demo-user", email: "demo@yugora.test", name: "YUGORA Guest" });
+    } catch (cause) {
+      setUser(null);
+      setProfile(null);
+      setMode("landing");
+      setAuthError(cause instanceof Error ? cause.message : "The assignment demo is unavailable right now.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
   const signOut = async () => {
     try { await requestJson("/api/auth/sign-out", { method: "POST", body: "{}" }); } catch { /* Expired sessions can still leave the local screen. */ }
     setUser(null); setProfile(null); setEmail(""); setOtp(""); setAuthError(null); setNotice(null); setMode("landing");
@@ -238,8 +254,10 @@ export default function YugoraShell() {
           <p>Meet people with room to be themselves. Share what matters to you. And discover a connection only when the feeling goes both ways.</p>
           <div className="landing-hero-actions">
             <button className="primary-button" onClick={() => { setAuthError(null); setNotice(null); setMode("sign-in"); }}>Get started <span>↗</span></button>
+            <button className="secondary-button demo-entry-button" onClick={() => void enterDemo()} disabled={authBusy}>{authBusy ? "Opening demo…" : "Explore assignment demo"}</button>
             <a href="#vision" className="landing-secondary-link">Discover the YUGORA way</a>
           </div>
+          <p className="demo-entry-note">Review the 30-profile Discover experience without creating an account.</p>
           <div className="landing-proof"><span>30 CURATED PROFILES IN THIS EXPERIENCE</span><i/> <span>ONE SIMPLE RULE: TWO YESSES</span></div>
         </div>
         <div className="landing-hero-art" aria-hidden="true"><div className="hero-orbit hero-orbit-one"/><div className="hero-orbit hero-orbit-two"/><div className="hero-glow"/><span className="hero-art-caption">LET MUTUALITY DECIDE</span></div>
@@ -273,6 +291,7 @@ export default function YugoraShell() {
               {notice && <p className="form-success" role="status">{notice}</p>}
               <button className="primary-button auth-submit" disabled={authBusy || !email.trim()}>{authBusy ? "Sending code…" : "Send me a sign-in code"}</button>
             </form>
+            <button className="text-button demo-modal-entry" onClick={() => void enterDemo()} disabled={authBusy}>Or explore the assignment demo without signing in</button>
             <small>Your email is used for sign-in only. Your Likes are never shown to other people unless the feeling is mutual.</small>
           </section>
         </div>
