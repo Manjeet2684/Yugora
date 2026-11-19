@@ -1,4 +1,4 @@
-# Persistence model (Gate 2)
+# YUGORA data model
 
 ## Tables
 
