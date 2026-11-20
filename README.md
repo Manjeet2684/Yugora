@@ -12,6 +12,10 @@ YUGORA is a privacy-first social discovery app. People create a profile, discove
 
 The demo is seeded with 30 fictional profiles, including eight incoming Likes, so the mutual-match flow can be explored immediately.
 
+## Assignment notes
+
+Part A product recommendations and the evidence boundary are documented in [Part A — Product Recommendations](docs/PART-A-PRODUCT-RECOMMENDATIONS.md).
+
 ## Features
 
 - **Home:** intentionally blank, as specified in the assignment.
