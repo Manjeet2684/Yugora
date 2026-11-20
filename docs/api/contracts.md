@@ -24,7 +24,7 @@ Returns profiles eligible for the configured demo user:
 }
 ```
 
-A profile is excluded only after the viewer has made a directed swipe on it. Incoming LIKEs do not remove a profile from the feed. The public DTO allow-list excludes user IDs, incoming-like flags/counts, Swipe rows, Match rows, and hidden-interest metadata.
+A profile is excluded permanently after the viewer has made a directed swipe on it. Both `LIKE` and `PASS` decisions are durable and never reset; a profile the viewer has already swiped on must never reappear. Incoming LIKEs do not remove a profile from the feed. The public DTO allow-list excludes user IDs, incoming-like flags/counts, Swipe rows, Match rows, and hidden-interest metadata.
 
 ## POST `/swipe`
 
