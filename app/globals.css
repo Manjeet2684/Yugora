@@ -564,3 +564,7 @@ kbd { display: inline-grid; min-width: 19px; height: 19px; place-items: center; 
   .demo-entry-button { width:100%; justify-content:center; }
   .demo-entry-note { max-width:310px; line-height:1.6; }
 }
+
+
+/* The assignment requires an intentionally empty Home panel; keep it a real, visible layout region. */
+.home-blank { min-height: min(68vh, 720px); }
