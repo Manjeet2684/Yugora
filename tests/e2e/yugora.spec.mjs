@@ -23,7 +23,6 @@ async function stubApi(page, options = {}) {
   let feedCalls = 0;
   let matchesCalls = 0;
   let swipeCalls = 0;
-  let resetCalls = 0;
 
   await page.route("**/feed", async (route) => {
     feedCalls += 1;
@@ -32,12 +31,6 @@ async function stubApi(page, options = {}) {
       return;
     }
     await route.fulfill(json({ profiles: profiles.filter((profile) => !decisions.has(profile.id)) }));
-  });
-
-  await page.route("**/api/feed/reset", async (route) => {
-    resetCalls += 1;
-    decisions.clear();
-    await route.fulfill(json({ resetCount: 1 }));
   });
 
   await page.route("**/matches", async (route) => {
@@ -67,14 +60,14 @@ async function stubApi(page, options = {}) {
     await route.fulfill(json(result));
   });
 
-  return { swipeRequests, decisions, get resetCalls() { return resetCalls; } };
+  return { swipeRequests, decisions };
 }
 
 async function openDiscover(page, options = {}) {
   const server = await stubApi(page, options);
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   return server;
 }
@@ -83,8 +76,8 @@ test("real PostgreSQL-backed browser journey persists a seeded mutual match acro
   // This test intentionally does not intercept /feed, /swipe or /matches.
   // The seeded Riya profile has a directed incoming LIKE from its owner to demo-user.
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
   await page.getByRole("button", { name: "Like this profile" }).click();
@@ -95,8 +88,8 @@ test("real PostgreSQL-backed browser journey persists a seeded mutual match acro
   await expect(dialog).toHaveCount(0);
 
   await page.reload();
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toHaveCount(0);
 
@@ -126,9 +119,8 @@ test("landing offers a one-click assignment demo without an email sign-in", asyn
   const demoButton = page.getByRole("button", { name: "Explore assignment demo" });
   await expect(demoButton).toBeVisible();
   await demoButton.click();
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await expect(page.getByText("YUGORA Guest, 25")).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
 });
@@ -142,21 +134,20 @@ test("opens Discover with one profile card and accessible Like/Pass actions", as
   await expect(page.getByRole("navigation", { name: "Main navigation" }).first()).toBeVisible();
 });
 
-test("Home explains the YUGORA promise and offers profile and discovery actions", async ({ page }) => {
+test("Home remains intentionally blank while Discover remains accessible", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await expect(page.getByText("Your interest is yours.", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Edit your profile" })).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Good connections/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
-  await page.getByRole("button", { name: "Home" }).click();
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
+  await page.getByRole("button", { name: "Home" }).first().click();
+  await expect(page.locator(".home-blank")).toBeVisible();
 });
 
 test("a signed-in member edits their profile and adds a custom hobby", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await page.getByRole("button", { name: "Edit your profile" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "My profile" }).click();
   await expect(page.getByRole("heading", { name: "Your profile." })).toBeVisible();
   await page.getByRole("button", { name: /Swimming/ }).click();
   await page.getByPlaceholder("Or write your own hobby…").fill("Bathroom singer");
@@ -166,8 +157,7 @@ test("a signed-in member edits their profile and adds a custom hobby", async ({ 
   await page.waitForTimeout(250);
   const profileSaveError = await page.locator(".profile-form .form-error").textContent().catch(() => null);
   if (profileSaveError) throw new Error("PROFILE_SAVE_ERROR: " + profileSaveError);
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await expect(page.getByText("YUGORA Guest, 25")).toBeVisible();
+  await expect(page.locator(".home-blank")).toBeVisible();
 });
 
 test("Pass records the direction, gives accurate feedback and advances", async ({ page }) => {
@@ -293,14 +283,11 @@ test("the API fixture excludes a server-confirmed decision from the next feed af
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toHaveCount(0);
 });
 
-test("an empty feed has its own recovery state", async ({ page }) => {
-  const server = await openDiscover(page, { profiles: [] });
+test("an empty feed is terminal and never offers to replay swiped profiles", async ({ page }) => {
+  await openDiscover(page, { profiles: [] });
   await expect(page.getByText("YOU ARE ALL CAUGHT UP")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start a new round" })).toBeVisible();
   await expect(page.locator(".profile-card")).toHaveCount(0);
-  await page.getByRole("button", { name: "Start a new round" }).click();
-  await expect.poll(() => server.resetCalls).toBe(1);
-  await expect(page.locator(".profile-card")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /new round|revisit passed|reset/i })).toHaveCount(0);
 });
 
 test("feed failure is distinct and can be retried", async ({ page }) => {
