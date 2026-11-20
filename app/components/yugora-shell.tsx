@@ -238,7 +238,7 @@ export default function YugoraShell() {
   }
 
   if (mode === "app" && user && profile) {
-    return <YugoraApp profile={profile} onEditProfile={() => setMode("profile")} onSignOut={() => void signOut()}/>;
+    return <YugoraApp onEditProfile={() => setMode("profile")} onSignOut={() => void signOut()}/>;
   }
 
   return (
