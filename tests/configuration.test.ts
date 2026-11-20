@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveMigrationDatabaseUrl } from "../prisma.config.js";
 import { isLocalOrTestDemoMode, isPublicDemoMode } from "../src/infrastructure/auth/demo-mode.js";
+import { readBoundedRequestBody } from "../src/infrastructure/http/read-bounded-request-body.js";
 
 const LOCAL_URL = "postgresql://yugora:yugora@127.0.0.1:5432/yugora?schema=public";
 
@@ -132,4 +133,40 @@ test("CI without the explicit test identity does not create a demo session", () 
     NODE_ENV: "production",
     CI: "true",
   }), false);
+});
+
+
+test("bounded request reader rejects an oversized declared body before reading it", async () => {
+  const request = new Request("https://yugora.test/api/profile", {
+    method: "POST",
+    headers: { "content-length": "9000" },
+    body: "{}",
+  });
+  assert.deepEqual(await readBoundedRequestBody(request, 8_192), {
+    ok: false,
+    reason: "too-large",
+  });
+});
+
+test("bounded request reader rejects an oversized streamed body without retaining it", async () => {
+  const request = new Request("https://yugora.test/api/profile", {
+    method: "POST",
+    body: "x".repeat(8_193),
+  });
+  assert.deepEqual(await readBoundedRequestBody(request, 8_192), {
+    ok: false,
+    reason: "too-large",
+  });
+});
+
+test("bounded request reader returns the exact bytes for a body within the limit", async () => {
+  const request = new Request("https://yugora.test/api/profile", {
+    method: "POST",
+    body: JSON.stringify({ name: "YUGORA Guest" }),
+  });
+  const result = await readBoundedRequestBody(request, 8_192);
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(new TextDecoder().decode(result.bytes), JSON.stringify({ name: "YUGORA Guest" }));
+  }
 });
