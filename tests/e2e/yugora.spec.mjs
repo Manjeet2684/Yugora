@@ -223,6 +223,8 @@ test("arrow shortcuts do not swipe while an interactive control has focus", asyn
 
 test("keyboard arrows use the same Like/Pass API mutation", async ({ page }) => {
   const server = await openDiscover(page);
+  // Navigation intentionally keeps focus; keyboard swipe shortcuts are disabled for focused controls.
+  await page.getByRole("button", { name: "Discover" }).first().evaluate((button) => button.blur());
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await page.keyboard.press("ArrowLeft");
