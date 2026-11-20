@@ -276,8 +276,8 @@ test("the API fixture excludes a server-confirmed decision from the next feed af
   await page.getByRole("button", { name: "Pass on this profile" }).click();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: /Good connections/ })).toBeVisible();
-  await page.getByRole("button", { name: "Explore Discover" }).click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toHaveCount(0);
