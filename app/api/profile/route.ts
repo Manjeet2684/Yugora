@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { createPlaceholderProfilePhotoUrl } from "../../../src/shared/profile-placeholder-photo.js";
 import { ensureApplicationUser, getAuthenticatedUser, getSharedPrismaClient } from "../../../src/infrastructure/auth/neon-auth-context.js";
 import { isLocalOrTestDemoMode, isPublicDemoMode } from "../../../src/infrastructure/auth/demo-mode.js";
+import { readBoundedRequestBody } from "../../../src/infrastructure/http/read-bounded-request-body.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,10 +88,19 @@ export async function PUT(request: Request): Promise<Response> {
     const context = await identity(request);
     if (!context) return json({ message: "Sign in before updating your profile." }, 401);
 
-    const declaredLength = Number(request.headers.get("content-length") ?? 0);
-    if (declaredLength > 8_192) return json({ message: "The profile update is too large." }, 413);
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).byteLength > 8_192) return json({ message: "The profile update is too large." }, 413);
+    const bodyResult = await readBoundedRequestBody(request, 8_192);
+    if (!bodyResult.ok) {
+      return bodyResult.reason === "too-large"
+        ? json({ message: "The profile update is too large." }, 413)
+        : json({ message: "The profile update could not be read." }, 400);
+    }
+
+    let raw: string;
+    try {
+      raw = new TextDecoder("utf-8", { fatal: true }).decode(bodyResult.bytes);
+    } catch {
+      return json({ message: "The profile update must contain valid UTF-8 JSON." }, 400);
+    }
 
     let value: unknown;
     try { value = JSON.parse(raw); } catch { return json({ message: "Send a valid JSON profile." }, 400); }
