@@ -133,14 +133,13 @@ function LoadingCard() {
   );
 }
 
-function EmptyFeed({ onRefresh }: { onRefresh: () => void }) {
+function EmptyFeed() {
   return (
     <div className="empty-state">
       <div className="empty-art"><span className="empty-orbit empty-orbit-one"/><span className="empty-orbit empty-orbit-two"/><span className="empty-heart"><Icon name="heart" size={34}/></span></div>
       <span className="eyebrow">YOU ARE ALL CAUGHT UP</span>
       <h2>That&apos;s everyone<br/>for now.</h2>
-      <p>You have reached the end of this round. Start another round to see profiles you passed again. People you liked stay out of the deck, and your matches stay safe.</p>
-      <button className="secondary-button" onClick={onRefresh}><Icon name="refresh" size={16}/> Start a new round</button>
+      <p>You have seen every available profile. Your Likes and Pass decisions are saved, and your matches remain private until they are mutual.</p>
     </div>
   );
 }
@@ -287,7 +286,7 @@ function MatchesView({ matches, status, error, onRetry }: { matches: readonly Ma
   );
 }
 
-export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profile?: ViewerProfile | null; onEditProfile?: () => void; onSignOut?: () => void } = {}) {
+export default function YugoraApp({ onEditProfile, onSignOut }: { onEditProfile?: () => void; onSignOut?: () => void } = {}) {
   const [screen, setScreen] = useState<Screen>("home");
   const [profiles, setProfiles] = useState<readonly PublicProfileDto[]>([]);
   const [feedStatus, setFeedStatus] = useState<LoadState>("loading");
@@ -317,20 +316,6 @@ export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profi
       setFeedStatus("error");
     }
   }, []);
-
-  const startNewRound = useCallback(async () => {
-    setFeedStatus("loading"); setFeedError(null); setNotice(null);
-    try {
-      const result = await apiRequest<{ resetCount: number }>("/api/feed/reset", { method: "POST" });
-      await loadFeed();
-      setNotice(result.resetCount > 0
-        ? "A fresh round is ready. " + result.resetCount + " passed profiles can be discovered again."
-        : "There are no passed profiles to bring back. Your Likes and matches are still saved.");
-    } catch (error) {
-      setFeedError(error instanceof Error ? error.message : "We couldn't start another round.");
-      setFeedStatus("error");
-    }
-  }, [loadFeed]);
 
   const loadMatches = useCallback(async () => {
     setMatchesStatus("loading"); setMatchesError(null);
@@ -422,28 +407,7 @@ export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profi
         <header className="mobile-topbar"><Brand compact/><span className="topbar-caption">A CONNECTION, ONLY WHEN IT&apos;S MUTUAL</span></header>
         <div className="account-toolbar"><span>YOUR YUGORA SPACE</span><div><button onClick={onEditProfile}>My profile <Icon name="arrow" size={14}/></button><button onClick={onSignOut}>Sign out</button></div></div>
         {screen === "home" ? (
-          <section className="home-dashboard" aria-labelledby="home-heading">
-            <div className="home-welcome">
-              <span className="eyebrow">WELCOME TO YOUR NEXT CHAPTER</span>
-              <h1 id="home-heading">Good connections<br/>begin with <em>being you.</em></h1>
-              <p>YUGORA gives people room to discover each other without turning connection into a numbers game. Your interest is private until it is returned.</p>
-              <div className="home-actions">
-                <button className="primary-button" onClick={() => setScreen("discover")}>Explore Discover <Icon name="arrow" size={16}/></button>
-                <button className="secondary-button" onClick={onEditProfile}>Edit your profile</button>
-              </div>
-              {profile && <div className="home-profile-preview">
-                <div className="home-profile-avatar">{Array.from(profile.name.trim())[0]?.toLocaleUpperCase("en-US") || "Y"}</div>
-                <div><span className="eyebrow">YOUR PROFILE</span><strong>{profile.name}, {profile.age}</strong><small>{profile.locationLabel} · {profile.interests.length} interests</small></div>
-                <button className="text-button" onClick={onEditProfile}>Edit <Icon name="arrow" size={14}/></button>
-              </div>}
-            </div>
-            <div className="home-values" aria-label="The YUGORA vision">
-              <article><span>01 / PRIVACY</span><h2>Your interest is yours.</h2><p>No public like counts or one-sided hints. A like stays private until it is returned.</p></article>
-              <article><span>02 / MUTUALITY</span><h2>Two yeses make a match.</h2><p>We only celebrate a connection when both people have chosen each other.</p></article>
-              <article><span>03 / HUMANITY</span><h2>Less noise, more meaning.</h2><p>Take your time, share what makes you you, and meet people with intention.</p></article>
-            </div>
-            <div className="home-manifesto"><span className="eyebrow">THE YUGORA PROMISE</span><p>Let curiosity lead.<br/><em>Let mutuality decide.</em></p><span>TWO SIDES. ONE GENUINE CONNECTION.</span></div>
-          </section>
+          <section className="home-blank" aria-label="Home tab placeholder" />
         ) : screen === "discover" ? (
           <section className="discover-screen" aria-labelledby="discover-heading">
             <div className="section-heading discover-heading">
@@ -466,7 +430,7 @@ export default function YugoraApp({ profile, onEditProfile, onSignOut }: { profi
                     <div className="keyboard-hint">USE <kbd>←</kbd> TO PASS <span>·</span> <kbd>→</kbd> TO LIKE</div>
                   </>
                 )}
-                {feedStatus === "ready" && !currentProfile && <EmptyFeed onRefresh={() => void startNewRound()}/>}
+                {feedStatus === "ready" && !currentProfile && <EmptyFeed/>}
                 {notice && <div className="toast-error" role="alert"><span>{notice}</span><button onClick={() => setNotice(null)} aria-label="Dismiss message"><Icon name="close" size={15}/></button></div>}
               </div>
               <aside className="discover-aside">
