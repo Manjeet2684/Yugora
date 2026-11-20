@@ -14,12 +14,12 @@ The demo is seeded with 30 fictional profiles, including eight incoming Likes, s
 
 ## Features
 
+- **Home:** intentionally blank, as specified in the assignment.
 - **Profiles:** email OTP sign-in, profile setup, editable bio, location, and interests.
 - **Discover:** one profile at a time, with mobile drag gestures and desktop Like/Pass controls.
 - **Private decisions:** a one-sided Like is never revealed to the other person.
 - **Mutual matches:** a match is created only after both participants have persisted a Like.
 - **Matches:** view confirmed mutual connections.
-- **New round:** revisit passed profiles without clearing Likes or existing matches.
 
 ## Tech stack
 
@@ -53,7 +53,6 @@ The core data model uses `User`, `Profile`, `Interest`, `ProfileInterest`, `Swip
 | `POST` | `/swipe` | Save a Like or Pass and return a confirmed match when mutual |
 | `GET` | `/matches` | Load mutual matches |
 | `GET` / `PUT` | `/api/profile` | Load or update the signed-in user's profile |
-| `POST` | `/api/feed/reset` | Start a new round by clearing only Pass decisions |
 
 The swipe API accepts only `profileId` and `direction`. The acting user is resolved on the server.
 
