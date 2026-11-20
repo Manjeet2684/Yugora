@@ -6,7 +6,7 @@
  * must not buffer an unbounded request before deciding to reject it.
  */
 export type BoundedRequestBodyResult =
-  | { readonly ok: true; readonly bytes: Uint8Array }
+  | { readonly ok: true; readonly bytes: Uint8Array<ArrayBuffer> }
   | { readonly ok: false; readonly reason: "too-large" | "unreadable" };
 
 export async function readBoundedRequestBody(
