@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 // First-party proxy: keeps the Neon Auth session cookie on the YUGORA origin.
 import { isLocalOrTestDemoMode, isPublicDemoMode } from "../../../../src/infrastructure/auth/demo-mode.js";
+import { readBoundedRequestBody } from "../../../../src/infrastructure/http/read-bounded-request-body.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,9 +75,13 @@ async function proxy(request: Request, context: RouteContext): Promise<Response>
 
   const init: RequestInit = { method: request.method, headers, cache: "no-store", redirect: "manual" };
   if (request.method !== "GET" && request.method !== "HEAD") {
-    const body = await request.arrayBuffer();
-    if (body.byteLength > 8_192) return json({ message: "The authentication request is too large." }, 413);
-    init.body = body;
+    const bodyResult = await readBoundedRequestBody(request, 8_192);
+    if (!bodyResult.ok) {
+      return bodyResult.reason === "too-large"
+        ? json({ message: "The authentication request is too large." }, 413)
+        : json({ message: "The authentication request could not be read." }, 400);
+    }
+    init.body = bodyResult.bytes;
   }
 
   let upstream: Response;
