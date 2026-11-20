@@ -16,7 +16,7 @@ The demo is seeded with 30 fictional profiles, including eight incoming Likes, s
 
 - **Home:** intentionally blank, as specified in the assignment.
 - **Profiles:** email OTP sign-in, profile setup, editable bio, location, and interests.
-- **Discover:** one profile at a time, with mobile drag gestures and desktop Like/Pass controls.
+- **Discover:** one profile at a time, with mobile drag gestures and desktop Like/Pass controls; a profile already swiped on never reappears.
 - **Private decisions:** a one-sided Like is never revealed to the other person.
 - **Mutual matches:** a match is created only after both participants have persisted a Like.
 - **Matches:** view confirmed mutual connections.
