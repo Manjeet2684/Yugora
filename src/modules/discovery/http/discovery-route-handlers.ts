@@ -77,9 +77,6 @@ function hasInfrastructureUnavailableCode(error: unknown): boolean {
     "P1008", // operation timed out
     "P1017", // server closed connection
     "P2024", // connection pool timeout
-    "SQLITE_BUSY",
-    "SQLITE_CANTOPEN",
-    "SQLITE_IOERR",
   ]);
 
   let candidate: unknown = error;
@@ -97,6 +94,9 @@ function hasInfrastructureUnavailableCode(error: unknown): boolean {
 }
 
 function mapApplicationError(error: unknown): Response {
+  if (error && typeof error === "object" && (error as { name?: unknown }).name === "AuthenticationRequiredError") {
+    return errorResponse(401, "AUTHENTICATION_REQUIRED", "Sign in with your email before using YUGORA.");
+  }
   if (error instanceof InvalidSwipeCommandError) {
     return errorResponse(400, error.code, error.message);
   }
@@ -193,6 +193,20 @@ async function readBoundedBody(request: Request): Promise<BodyReadResult> {
   }
 }
 
+function hasUnpairedSurrogate(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdbff) {
+      const nextCodeUnit = value.charCodeAt(index + 1);
+      if (!(nextCodeUnit >= 0xdc00 && nextCodeUnit <= 0xdfff)) return true;
+      index += 1;
+    } else if (codeUnit >= 0xdc00 && codeUnit <= 0xdfff) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function parseSwipeBody(text: string): SwipeRequestBody | Response {
   let value: unknown;
   try {
@@ -218,9 +232,10 @@ function parseSwipeBody(text: string): SwipeRequestBody | Response {
   if (
     profileId.length === 0 ||
     profileId.length > 128 ||
-    /[\u0000-\u001f\u007f]/.test(profileId)
+    /[\u0000-\u001f\u007f]/.test(profileId) ||
+    hasUnpairedSurrogate(profileId)
   ) {
-    return errorResponse(400, "INVALID_REQUEST", "profileId must contain between 1 and 128 valid characters.");
+    return errorResponse(400, "INVALID_REQUEST", "profileId must contain between 1 and 128 valid Unicode characters.");
   }
   if (body.direction !== "LIKE" && body.direction !== "PASS") {
     return errorResponse(400, "INVALID_REQUEST", "direction must be exactly LIKE or PASS.");

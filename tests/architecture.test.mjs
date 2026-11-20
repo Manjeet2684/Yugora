@@ -94,6 +94,7 @@ class InMemoryStore {
             profiles: this.profileRepository,
             swipes: this.swipeRepository,
             matches: this.matchRepository,
+            lockPair: async () => undefined,
           });
         } catch (error) {
           this.swipes = swipeSnapshot;
@@ -345,4 +346,18 @@ test('unknown profile is rejected without creating a Swipe', async () => {
     { name: 'ProfileNotFoundError', code: 'PROFILE_NOT_FOUND' },
   );
   assert.equal(store.swipes.size, 0);
+});
+
+
+test('canonical match ordering follows PostgreSQL UTF-8 byte order for Unicode IDs', () => {
+  const privateUseId = asUserId('unicode-\uE000');
+  const supplementaryId = asUserId('unicode-😀');
+  const match = createMatch({
+    id: asMatchId('match_unicode_order'),
+    participantA: supplementaryId,
+    participantB: privateUseId,
+    matchedAt: new Date('2026-11-18T12:00:00.000Z'),
+  });
+  assert.equal(match.userLowId, privateUseId);
+  assert.equal(match.userHighId, supplementaryId);
 });

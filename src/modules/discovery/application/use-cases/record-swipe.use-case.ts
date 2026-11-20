@@ -29,12 +29,18 @@ export class RecordSwipeUseCase {
 
     const actorUserId = await this.currentUser.getCurrentUserId();
 
-    return this.unitOfWork.execute(async ({ profiles, swipes, matches }) => {
+    return this.unitOfWork.execute(async ({ profiles, swipes, matches, lockPair }) => {
       const profile = await profiles.findActiveById(command.profileId);
       if (!profile) throw new ProfileNotFoundError();
       if (profile.ownerUserId === actorUserId) {
         throw new InvalidSwipeCommandError("You cannot swipe on your own profile.");
       }
+
+      // Opposite-direction swipes for the same pair must serialize. Without a
+      // transaction-scoped pair lock, two simultaneous reciprocal LIKEs can
+      // each commit after observing the other's uncommitted swipe and neither
+      // request creates the mutual Match.
+      await lockPair(actorUserId, profile.ownerUserId);
 
       const existing = await swipes.findDecision(actorUserId, profile.ownerUserId);
       if (existing && existing.direction !== command.direction) {

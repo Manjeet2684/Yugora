@@ -297,3 +297,34 @@ test('HTTP error mapping hides internal error details and marks transient databa
   assert.equal(unavailableBody.error.retryable, true);
   assert.equal(JSON.stringify(unavailableBody).includes('Underlying adapter'), false);
 });
+
+
+test('POST /swipe rejects invalid Content-Length declarations and non-UTF-8 JSON bytes', async () => {
+  const malformedLength = await handlers.postSwipe(post('{}', {
+    headers: { 'content-length': 'not-a-number' },
+  }));
+  assert.equal(malformedLength.status, 400);
+  assert.equal((await malformedLength.json()).error.code, 'INVALID_CONTENT_LENGTH');
+
+  const declaredTooLarge = await handlers.postSwipe(post('{}', {
+    headers: { 'content-length': '5000' },
+  }));
+  assert.equal(declaredTooLarge.status, 413);
+  assert.equal((await declaredTooLarge.json()).error.code, 'PAYLOAD_TOO_LARGE');
+
+  const invalidUtf8 = new Request('https://yugora.test/swipe', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: new Uint8Array([0x7b, 0xff, 0x7d]),
+  });
+  const invalidEncodingResponse = await handlers.postSwipe(invalidUtf8);
+  assert.equal(invalidEncodingResponse.status, 400);
+  assert.equal((await invalidEncodingResponse.json()).error.code, 'INVALID_BODY_ENCODING');
+});
+
+
+test('POST /swipe rejects JSON-escaped unpaired UTF-16 surrogates in profile IDs', async () => {
+  const response = await handlers.postSwipe(post('{"profileId":"\\uD800","direction":"LIKE"}'));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error.code, 'INVALID_REQUEST');
+});

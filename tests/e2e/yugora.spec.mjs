@@ -1,9 +1,9 @@
 // Copyright (c) 2026 Manjeet2684. All rights reserved.
 import { test, expect } from "@playwright/test";
 
-const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
-const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"https://i.pravatar.cc/jordan.jpg","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
-const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"https://i.pravatar.cc/avery.jpg","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
+const profileA = {"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23334%22%2F%3E%3C%2Fsvg%3E","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]};
+const profileB = {"id":"profile-jordan","name":"Jordan Patel","age":27,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23475%22%2F%3E%3C%2Fsvg%3E","bio":"Weekend trail seeker and weekday product builder.","locationLabel":"Gurugram","interests":["Hiking","Design","Music"]};
+const mutualMatch = {"id":"match-avery","profile":{"id":"profile-avery","name":"Avery Morgan","age":25,"photoUrl":"data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2010%2010%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23334%22%2F%3E%3C%2Fsvg%3E","bio":"A curious mind, a full camera roll, and a weakness for good coffee.","locationLabel":"New Delhi","interests":["Photography","Coffee","Travel"]},"matchedAt":"2026-11-18T12:00:00.000Z"};
 const noMatch = { success: true, matched: false, matchCreated: false, match: null };
 const errorPayload = (message) => ({
   success: false,
@@ -66,14 +66,18 @@ async function stubApi(page, options = {}) {
 async function openDiscover(page, options = {}) {
   const server = await stubApi(page, options);
   await page.goto("/");
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   return server;
 }
 
-test("real SQLite-backed browser journey persists a seeded mutual match across reload", async ({ page }) => {
+test("real PostgreSQL-backed browser journey persists a seeded mutual match across reload", async ({ page }) => {
   // This test intentionally does not intercept /feed, /swipe or /matches.
   // The seeded Riya profile has a directed incoming LIKE from its owner to demo-user.
   await page.goto("/");
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
   await page.getByRole("button", { name: "Like this profile" }).click();
@@ -84,6 +88,8 @@ test("real SQLite-backed browser journey persists a seeded mutual match across r
   await expect(dialog).toHaveCount(0);
 
   await page.reload();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toHaveCount(0);
 
@@ -91,6 +97,32 @@ test("real SQLite-backed browser journey persists a seeded mutual match across r
   await expect(page.getByRole("heading", { name: "Your matches." })).toBeVisible();
   await expect(page.locator(".match-card")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: "Riya Mehta, 24" })).toBeVisible();
+});
+
+test("landing offers a one-click assignment demo without an email sign-in", async ({ page }) => {
+  await page.route("**/api/auth/get-session", (route) => route.fulfill(json({ user: null })));
+  await page.route("**/api/profile", (route) => route.fulfill(json({
+    profile: {
+      id: "demo-profile",
+      name: "YUGORA Guest",
+      age: 25,
+      photoUrl: profileA.photoUrl,
+      bio: "Here for genuine conversations and good coffee.",
+      locationLabel: "New Delhi",
+      interests: ["Coffee", "Reading", "Music"],
+      email: "demo@yugora.test",
+    },
+  })));
+  await stubApi(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /A connection/ })).toBeVisible();
+  const demoButton = page.getByRole("button", { name: "Explore assignment demo" });
+  await expect(demoButton).toBeVisible();
+  await demoButton.click();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
+  await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
 });
 
 test("opens Discover with one profile card and accessible Like/Pass actions", async ({ page }) => {
@@ -102,19 +134,36 @@ test("opens Discover with one profile card and accessible Like/Pass actions", as
   await expect(page.getByRole("navigation", { name: "Main navigation" }).first()).toBeVisible();
 });
 
-test("Home stays intentionally blank and navigation returns to Discover", async ({ page }) => {
-  await openDiscover(page);
-  await page.getByRole("button", { name: "Home" }).click();
-  const home = page.locator('[aria-label="Home tab placeholder"]');
-  await expect(home).toBeVisible();
-  await expect(home).toBeEmpty();
-  await page.getByRole("button", { name: "Discover" }).click();
+test("Home remains intentionally blank while Discover remains accessible", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Good connections/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
+  await page.getByRole("button", { name: "Home" }).first().click();
+  await expect(page.locator(".home-blank")).toBeVisible();
 });
 
-test("Pass records the direction and advances to the next profile", async ({ page }) => {
+test("a signed-in member edits their profile and adds a custom hobby", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "My profile" }).click();
+  await expect(page.getByRole("heading", { name: "Your profile." })).toBeVisible();
+  await page.getByRole("button", { name: /Swimming/ }).click();
+  await page.getByPlaceholder("Or write your own hobby…").fill("Bathroom singer");
+  await page.getByRole("button", { name: "Add hobby" }).click();
+  await expect(page.getByRole("button", { name: /Bathroom singer/ })).toBeVisible();
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.waitForTimeout(250);
+  const profileSaveError = await page.locator(".profile-form .form-error").textContent().catch(() => null);
+  if (profileSaveError) throw new Error("PROFILE_SAVE_ERROR: " + profileSaveError);
+  await expect(page.locator(".home-blank")).toBeVisible();
+});
+
+test("Pass records the direction, gives accurate feedback and advances", async ({ page }) => {
   const server = await openDiscover(page);
   await page.getByRole("button", { name: "Pass on this profile" }).click();
+  await expect(page.locator(".screen-reader-status")).toHaveText("You passed on Avery Morgan.");
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   expect(server.swipeRequests).toEqual([{ profileId: profileA.id, direction: "PASS" }]);
 });
@@ -151,8 +200,31 @@ test("mutual Like celebrates only the returned match and displays it in Matches"
   expect(server.swipeRequests[0]).toEqual({ profileId: profileA.id, direction: "LIKE" });
 });
 
+test("desktop hover adds depth without triggering a swipe", async ({ page }) => {
+  const server = await openDiscover(page);
+  const card = page.locator(".profile-card");
+  const image = page.locator(".profile-card-photo img");
+  await expect(image).toBeVisible();
+  await card.hover({ position: { x: 180, y: 160 } });
+  await expect.poll(() => image.evaluate((element) => getComputedStyle(element).transform)).not.toBe("none");
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
+  expect(server.swipeRequests).toHaveLength(0);
+});
+
+test("arrow shortcuts do not swipe while an interactive control has focus", async ({ page }) => {
+  const server = await openDiscover(page);
+  const likeButton = page.getByRole("button", { name: "Like this profile" });
+  await likeButton.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toBeVisible();
+  await expect(likeButton).toBeFocused();
+  expect(server.swipeRequests).toHaveLength(0);
+});
+
 test("keyboard arrows use the same Like/Pass API mutation", async ({ page }) => {
   const server = await openDiscover(page);
+  // Navigation intentionally keeps focus; keyboard swipe shortcuts are disabled for focused controls.
+  await page.getByRole("button", { name: "Discover" }).first().evaluate((button) => button.blur());
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await page.keyboard.press("ArrowLeft");
@@ -206,16 +278,18 @@ test("the API fixture excludes a server-confirmed decision from the next feed af
   await page.getByRole("button", { name: "Pass on this profile" }).click();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await page.reload();
+  await expect(page.locator(".home-blank")).toBeVisible();
+  await page.getByRole("button", { name: "Discover" }).first().click();
   await expect(page.getByRole("heading", { name: "Discover." })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Jordan Patel, 27" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Avery Morgan, 25" })).toHaveCount(0);
 });
 
-test("an empty feed has its own recovery state", async ({ page }) => {
+test("an empty feed is terminal and never offers to replay swiped profiles", async ({ page }) => {
   await openDiscover(page, { profiles: [] });
   await expect(page.getByText("YOU ARE ALL CAUGHT UP")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Check again" })).toBeVisible();
   await expect(page.locator(".profile-card")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /new round|revisit passed|reset/i })).toHaveCount(0);
 });
 
 test("feed failure is distinct and can be retried", async ({ page }) => {
@@ -244,8 +318,8 @@ test("matches failure has a separate retry path", async ({ page }) => {
 });
 
 test("broken profile photo falls back to the profile initial", async ({ page }) => {
-  await page.route("https://i.pravatar.cc/**", (route) => route.abort());
-  await openDiscover(page);
+  await page.route("**/intentionally-missing-avatar.svg", (route) => route.fulfill({ status: 404, contentType: "image/svg+xml", body: "" }));
+  await openDiscover(page, { profiles: [{ ...profileA, photoUrl: "/intentionally-missing-avatar.svg" }] });
   await expect(page.locator(".profile-card .profile-image img")).toHaveCount(0);
   await expect(page.locator(".profile-card .profile-image-fallback")).toBeVisible();
   await expect(page.locator(".profile-card .profile-image-fallback")).toHaveText("A");

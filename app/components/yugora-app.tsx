@@ -4,7 +4,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -21,6 +20,7 @@ import type { SwipeDirection } from "../../src/modules/discovery/domain/entities
 import { getSwipeTilt, resolveSwipeDirection } from "../../src/modules/discovery/ui/swipe-gesture.js";
 
 type Screen = "home" | "discover" | "matches";
+export interface ViewerProfile { id: string; name: string; age: number; photoUrl: string; bio: string; locationLabel: string; interests: readonly string[]; email?: string; }
 type LoadState = "loading" | "ready" | "error";
 type DragPosition = { x: number; y: number };
 
@@ -40,7 +40,7 @@ async function apiRequest<T>(url: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
-function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart" | "x" | "map" | "spark" | "arrow" | "refresh" | "close" | "check" | "calendar" | "loader"; size?: number }) {
+function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart" | "x" | "map" | "spark" | "arrow" | "refresh" | "close" | "check" | "calendar"; size?: number }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -55,7 +55,6 @@ function Icon({ name, size = 20 }: { name: "home" | "compass" | "users" | "heart
     close: <><path d="m6 6 12 12M18 6 6 18"/></>,
     check: <path d="m5 12 4 4L19 6"/>,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></>,
-    loader: <><path d="M21 12a9 9 0 1 1-6.2-8.56"/></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }
@@ -71,12 +70,12 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function ProfileImage({ profile, className = "" }: { profile: Pick<PublicProfileDto, "name" | "photoUrl">; className?: string }) {
   const [failed, setFailed] = useState(false);
-  const initial = profile.name.trim().charAt(0).toUpperCase() || "Y";
+  const initial = Array.from(profile.name.trim())[0]?.toLocaleUpperCase("en-US") || "Y";
   return (
     <div className={`profile-image ${className}`}>
       <div className="profile-image-fallback" aria-hidden="true">{initial}</div>
       {!failed && (
-        // Profile photos are fictional seeded placeholders. The fallback remains visible if the image host fails.
+        // Profile photos are fictional local placeholders. The initials fallback remains available if an asset fails.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={profile.photoUrl} alt={`${profile.name}'s profile`} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
       )}
@@ -134,14 +133,13 @@ function LoadingCard() {
   );
 }
 
-function EmptyFeed({ onRefresh }: { onRefresh: () => void }) {
+function EmptyFeed() {
   return (
     <div className="empty-state">
       <div className="empty-art"><span className="empty-orbit empty-orbit-one"/><span className="empty-orbit empty-orbit-two"/><span className="empty-heart"><Icon name="heart" size={34}/></span></div>
       <span className="eyebrow">YOU ARE ALL CAUGHT UP</span>
       <h2>That&apos;s everyone<br/>for now.</h2>
-      <p>You have seen every available profile. Good connections take their time.</p>
-      <button className="secondary-button" onClick={onRefresh}><Icon name="refresh" size={16}/> Check again</button>
+      <p>You have seen every available profile. Your Likes and Pass decisions are saved, and your matches remain private until they are mutual.</p>
     </div>
   );
 }
@@ -170,7 +168,7 @@ function ProfileCard({
     transform: exitDirection
       ? `translate3d(${exitDirection === "LIKE" ? "130%" : "-130%"}, -5%, 0) rotate(${exitDirection === "LIKE" ? 18 : -18}deg)`
       : `translate3d(${drag.x}px, ${drag.y * 0.18}px, 0) rotate(${tilt}deg)`,
-    transition: exitDirection ? "transform 260ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease" : drag.x === 0 && drag.y === 0 ? "transform 220ms ease" : "none",
+    transition: exitDirection ? "transform 260ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease" : drag.x === 0 && drag.y === 0 ? "transform 220ms ease, opacity 260ms ease, box-shadow 320ms ease, border-color 320ms ease" : "none",
     opacity: exitDirection ? 0 : 1,
   };
   const likeOpacity = Math.min(1, Math.max(0, drag.x / 100));
@@ -188,8 +186,8 @@ function ProfileCard({
       <ProfileImage profile={profile} className="profile-card-photo" />
       <div className="photo-scrim" />
       <div className="card-topline">
-        <span className="photo-index"><span/> A FACE, A STORY</span>
-        <span className="photo-number">01 <i>/</i> 01</span>
+        <span className="card-eyebrow"><span /> DISCOVER SOMEONE NEW</span>
+        <span className="card-promise">A MUTUAL YES</span>
       </div>
       <div className="swipe-stamp swipe-stamp-like" style={{ opacity: likeOpacity }}>LIKE</div>
       <div className="swipe-stamp swipe-stamp-pass" style={{ opacity: passOpacity }}>PASS</div>
@@ -288,8 +286,8 @@ function MatchesView({ matches, status, error, onRetry }: { matches: readonly Ma
   );
 }
 
-export default function YugoraApp() {
-  const [screen, setScreen] = useState<Screen>("discover");
+export default function YugoraApp({ onEditProfile, onSignOut }: { onEditProfile?: () => void; onSignOut?: () => void } = {}) {
+  const [screen, setScreen] = useState<Screen>("home");
   const [profiles, setProfiles] = useState<readonly PublicProfileDto[]>([]);
   const [feedStatus, setFeedStatus] = useState<LoadState>("loading");
   const [feedError, setFeedError] = useState<string | null>(null);
@@ -331,7 +329,7 @@ export default function YugoraApp() {
     }
   }, []);
 
-  useEffect(() => { void loadFeed(); }, [loadFeed]);
+  useEffect(() => { if (screen === "discover") void loadFeed(); }, [screen, loadFeed]);
   useEffect(() => { if (screen === "matches") void loadMatches(); }, [screen, loadMatches]);
 
   const submitSwipe = useCallback(async (direction: SwipeDirection) => {
@@ -350,7 +348,7 @@ export default function YugoraApp() {
       setProfiles((current) => current.filter((item) => item.id !== profile.id));
       setDrag({ x: 0, y: 0 });
       setExitDirection(null);
-      setStatusMessage(result.matched ? `You and ${profile.name} matched.` : `${profile.name} ${direction === "LIKE" ? "liked" : "passed"}.`);
+      setStatusMessage(result.matched ? `You and ${profile.name} matched.` : direction === "LIKE" ? `You liked ${profile.name}.` : `You passed on ${profile.name}.`);
       if (result.matched && result.match) {
         setCelebration(result.match);
         setMatches((current) => current.some((item) => item.id === result.match?.id) ? current : [result.match!, ...current]);
@@ -389,7 +387,10 @@ export default function YugoraApp() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
       const target = event.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      if (target && (
+        target.isContentEditable ||
+        target.closest('input, textarea, select, button, a[href], [contenteditable="true"], [role="button"], [role="link"], [role="menuitem"], [role="textbox"]')
+      )) return;
       if (event.key === "ArrowRight") { event.preventDefault(); void submitSwipe("LIKE"); }
       if (event.key === "ArrowLeft") { event.preventDefault(); void submitSwipe("PASS"); }
     };
@@ -397,13 +398,14 @@ export default function YugoraApp() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [screen, currentProfile, celebration, submitSwipe]);
 
-  const activeScreenTitle = useMemo(() => screen === "discover" ? "Discover" : screen === "matches" ? "Matches" : "Home", [screen]);
+  const activeScreenTitle = screen === "discover" ? "Discover" : screen === "matches" ? "Matches" : "Home";
 
   return (
     <main className="app-frame">
       <Navigation screen={screen} onNavigate={setScreen} matchCount={matches.length}/>
       <div className="app-main">
         <header className="mobile-topbar"><Brand compact/><span className="topbar-caption">A CONNECTION, ONLY WHEN IT&apos;S MUTUAL</span></header>
+        <div className="account-toolbar"><span>YOUR YUGORA SPACE</span><div><button onClick={onEditProfile}>My profile <Icon name="arrow" size={14}/></button><button onClick={onSignOut}>Sign out</button></div></div>
         {screen === "home" ? (
           <section className="home-blank" aria-label="Home tab placeholder" />
         ) : screen === "discover" ? (
@@ -419,7 +421,7 @@ export default function YugoraApp() {
                 {feedStatus === "ready" && currentProfile && (
                   <>
                     <div className="card-stack-back card-stack-back-two"/><div className="card-stack-back card-stack-back-one"/>
-                    <ProfileCard profile={currentProfile} drag={drag} exitDirection={exitDirection} busy={busy} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}/>
+                    <ProfileCard key={currentProfile.id} profile={currentProfile} drag={drag} exitDirection={exitDirection} busy={busy} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}/>
                     <div className="swipe-actions" aria-label="Profile actions">
                       <button className="action-button action-pass" onClick={() => void submitSwipe("PASS")} disabled={busy} aria-label="Pass on this profile"><Icon name="x" size={25}/></button>
                       <span className="action-hint">NOT A MATCH? <b>THAT&apos;S OKAY.</b></span>
@@ -428,7 +430,7 @@ export default function YugoraApp() {
                     <div className="keyboard-hint">USE <kbd>←</kbd> TO PASS <span>·</span> <kbd>→</kbd> TO LIKE</div>
                   </>
                 )}
-                {feedStatus === "ready" && !currentProfile && <EmptyFeed onRefresh={() => void loadFeed()}/>}
+                {feedStatus === "ready" && !currentProfile && <EmptyFeed/>}
                 {notice && <div className="toast-error" role="alert"><span>{notice}</span><button onClick={() => setNotice(null)} aria-label="Dismiss message"><Icon name="close" size={15}/></button></div>}
               </div>
               <aside className="discover-aside">
@@ -440,7 +442,7 @@ export default function YugoraApp() {
         ) : (
           <MatchesView matches={matches} status={matchesStatus} error={matchesError} onRetry={() => void loadMatches()}/>
         )}
-        {screen !== "home" && <footer className="content-footer"><span>YUGORA <i>·</i> TWO SIDES. ONE GENUINE CONNECTION.</span><span>MADE FOR MUTUALITY <b>♡</b></span></footer>}
+        <footer className="content-footer"><span>YUGORA <i>·</i> TWO SIDES. ONE GENUINE CONNECTION.</span><span>MADE FOR MUTUALITY <b>♡</b></span></footer>
       </div>
       {celebration && <MatchCelebration match={celebration} onClose={() => setCelebration(null)} onViewMatches={() => { setCelebration(null); setScreen("matches"); }}/>} 
       <div className="screen-reader-status" aria-live="polite" aria-atomic="true">{busy ? "Saving your swipe" : statusMessage || notice || ""}</div>

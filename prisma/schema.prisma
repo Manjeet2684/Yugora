@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
@@ -60,13 +60,13 @@ model ProfileInterest {
 /// Incoming interest is a Swipe where the current user is targetUserId; it is
 /// never exposed as a separate feed attribute or table.
 model Swipe {
-  id          String   @id @default(cuid())
-  actorUserId String
+  id           String   @id @default(cuid())
+  actorUserId  String
   targetUserId String
-  direction   String
-  createdAt   DateTime @default(now())
-  actor       User     @relation("SwipeActor", fields: [actorUserId], references: [id], onDelete: Cascade)
-  target      User     @relation("SwipeTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  direction    String
+  createdAt    DateTime @default(now())
+  actor        User     @relation("SwipeActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  target       User     @relation("SwipeTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
 
   @@unique([actorUserId, targetUserId])
   @@index([targetUserId, direction])
@@ -74,7 +74,7 @@ model Swipe {
 }
 
 /// Only mutual LIKE pairs are stored. userLowId is lexicographically smaller
-/// than userHighId, making the pair order-independent and unique.
+/// using PostgreSQL's C collation, making the pair order-independent and unique.
 model Match {
   id         String   @id @default(cuid())
   userLowId  String

@@ -48,6 +48,16 @@ after(async () => {
 
 test('seed is repeatable and includes at least 30 mock profiles with incoming demo likes', async () => {
   const seededProfiles = await prisma.profile.count({ where: { id: { startsWith: 'yugora-profile-' } } });
+  const seededPhotoUrls = await prisma.profile.findMany({
+    where: { id: { startsWith: 'yugora-profile-' } },
+    select: { photoUrl: true },
+  });
+  assert.equal(seededPhotoUrls.length, 30);
+  assert.ok(
+    seededPhotoUrls.every(({ photoUrl }) => photoUrl.startsWith('data:image/svg+xml;charset=UTF-8,')),
+    'seeded demo photos must be local data URLs rather than third-party image hosts',
+  );
+
   const incomingLikes = await prisma.swipe.count({
     where: { targetUserId: process.env.DEMO_USER_ID ?? 'demo-user', direction: 'LIKE' },
   });
@@ -173,7 +183,7 @@ test('Unit of Work rolls back a swipe when the transaction callback fails', asyn
 });
 
 
-test('RecordSwipeUseCase creates one real SQLite Match only after reciprocal LIKE', async () => {
+test('RecordSwipeUseCase creates one real PostgreSQL Match only after reciprocal LIKE', async () => {
   const viewerId = asUserId(unique('mutual-viewer'));
   const targetId = asUserId(unique('mutual-target'));
   const targetProfileId = asProfileId(unique('mutual-profile'));
@@ -265,7 +275,61 @@ test('Match repository refuses to create a match without two persisted LIKE deci
   );
 });
 
-test('SQLite trigger blocks direct invalid Match inserts and deletes stale matches when a LIKE is removed', async () => {
+test('simultaneous reciprocal LIKE requests serialize and create one mutual match', async () => {
+  const firstUserId = asUserId(unique('reciprocal-first'));
+  const secondUserId = asUserId(unique('reciprocal-second'));
+  const firstProfileId = asProfileId(unique('reciprocal-profile'));
+  const secondProfileId = asProfileId(unique('reciprocal-profile'));
+
+  await ensureProfile({
+    userId: firstUserId,
+    profileId: firstProfileId,
+    name: 'Reciprocal First Fixture',
+  });
+  await ensureProfile({
+    userId: secondUserId,
+    profileId: secondProfileId,
+    name: 'Reciprocal Second Fixture',
+  });
+
+  const firstUseCase = new RecordSwipeUseCase(
+    { getCurrentUserId: async () => firstUserId },
+    new PrismaUnitOfWork(prisma),
+    () => unique('reciprocal-first-swipe'),
+  );
+  const secondUseCase = new RecordSwipeUseCase(
+    { getCurrentUserId: async () => secondUserId },
+    new PrismaUnitOfWork(prisma),
+    () => unique('reciprocal-second-swipe'),
+  );
+
+  const [firstResult, secondResult] = await Promise.all([
+    firstUseCase.execute({ profileId: secondProfileId, direction: 'LIKE' }),
+    secondUseCase.execute({ profileId: firstProfileId, direction: 'LIKE' }),
+  ]);
+
+  const [userLowId, userHighId] = [firstUserId, secondUserId].sort();
+  const [swipeCount, matchCount, match] = await Promise.all([
+    prisma.swipe.count({
+      where: {
+        OR: [
+          { actorUserId: firstUserId, targetUserId: secondUserId },
+          { actorUserId: secondUserId, targetUserId: firstUserId },
+        ],
+      },
+    }),
+    prisma.match.count({ where: { userLowId, userHighId } }),
+    prisma.match.findUnique({ where: { userLowId_userHighId: { userLowId, userHighId } } }),
+  ]);
+
+  assert.equal(swipeCount, 2, 'both directed LIKE decisions must persist exactly once');
+  assert.equal(matchCount, 1, 'the canonical pair must have exactly one Match row');
+  assert.ok(match, 'the reciprocal likes must result in a persisted Match');
+  assert.equal([firstResult, secondResult].filter((result) => result.matched).length, 1,
+    'the first transaction returns before mutuality; the serialized second transaction creates the match');
+});
+
+test('PostgreSQL trigger blocks direct invalid Match inserts and deletes stale matches when a LIKE is removed', async () => {
   const firstUserId = asUserId(unique('trigger-a'));
   const secondUserId = asUserId(unique('trigger-b'));
   const thirdUserId = asUserId(unique('trigger-c'));
@@ -324,4 +388,83 @@ test('SQLite trigger blocks direct invalid Match inserts and deletes stale match
     } },
   });
   assert.equal(await prisma.match.count({ where: { id: matchId } }), 0);
+});
+
+
+test('Unicode match participants use the same canonical byte order as PostgreSQL COLLATE C', async () => {
+  const privateUseId = asUserId('yugora-unicode-\uE000');
+  const supplementaryId = asUserId('yugora-unicode-😀');
+  await ensureUser(privateUseId);
+  await ensureUser(supplementaryId);
+
+  const swipeRepository = new PrismaSwipeRepository(prisma);
+  for (const [actorUserId, targetUserId] of [
+    [privateUseId, supplementaryId],
+    [supplementaryId, privateUseId],
+  ]) {
+    await swipeRepository.createIfAbsent(createSwipeDecision({
+      id: asSwipeId(unique('unicode-mutual-swipe')),
+      actorUserId,
+      targetUserId,
+      direction: 'LIKE',
+      createdAt: new Date(),
+    }));
+  }
+
+  const match = createMatch({
+    id: asMatchId(unique('unicode-match')),
+    participantA: supplementaryId,
+    participantB: privateUseId,
+    matchedAt: new Date(),
+  });
+  assert.equal(match.userLowId, privateUseId);
+  assert.equal(match.userHighId, supplementaryId);
+
+  const persisted = await new PrismaMatchRepository(prisma).createIfAbsent(match);
+  assert.equal(persisted.created, true);
+  assert.equal(persisted.match.userLowId, privateUseId);
+  assert.equal(persisted.match.userHighId, supplementaryId);
+});
+
+
+test('public assignment demo feed contains only the 30 seeded demo profiles', async () => {
+  const viewerId = asUserId(unique('assignment-demo-viewer'));
+  const seededOwnerId = `yugora-user-fixture-${randomUUID()}`;
+  const otherOwnerId = unique('ordinary-member');
+  const seededProfileId = asProfileId(`yugora-profile-fixture-${randomUUID()}`);
+  const otherProfileId = asProfileId(unique('ordinary-profile'));
+  await ensureUser(viewerId);
+  await ensureProfile({ userId: asUserId(seededOwnerId), profileId: seededProfileId, name: 'Seeded Assignment Profile' });
+  await ensureProfile({ userId: asUserId(otherOwnerId), profileId: otherProfileId, name: 'Ordinary Member Profile' });
+
+  const previousDemoFlag = process.env.YUGORA_PUBLIC_DEMO_MODE;
+  const previousDemoUserId = process.env.DEMO_USER_ID;
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  try {
+    process.env.YUGORA_PUBLIC_DEMO_MODE = 'true';
+    process.env.DEMO_USER_ID = viewerId;
+    process.env.VERCEL_ENV = 'preview';
+
+    const repository = new PrismaProfileRepository(prisma);
+    const assignmentFeed = await repository.listEligibleForViewer(viewerId);
+    const assignmentIds = assignmentFeed.map((profile) => profile.id);
+    assert.ok(assignmentIds.includes(seededProfileId));
+    assert.ok(!assignmentIds.includes(otherProfileId),
+      'the shared reviewer identity must not see profiles outside the fictional seeded catalogue');
+
+    const normalViewerId = asUserId(unique('normal-viewer'));
+    await ensureUser(normalViewerId);
+    const normalFeed = await repository.listEligibleForViewer(normalViewerId);
+    const normalIds = normalFeed.map((profile) => profile.id);
+    assert.ok(normalIds.includes(seededProfileId));
+    assert.ok(normalIds.includes(otherProfileId),
+      'ordinary signed-in users must continue to discover other active members');
+  } finally {
+    if (previousDemoFlag === undefined) delete process.env.YUGORA_PUBLIC_DEMO_MODE;
+    else process.env.YUGORA_PUBLIC_DEMO_MODE = previousDemoFlag;
+    if (previousDemoUserId === undefined) delete process.env.DEMO_USER_ID;
+    else process.env.DEMO_USER_ID = previousDemoUserId;
+    if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previousVercelEnv;
+  }
 });

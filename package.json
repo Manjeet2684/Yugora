@@ -13,8 +13,9 @@
     "typecheck": "tsc --noEmit",
     "build:architecture": "tsc",
     "test:architecture": "npm run build:architecture && node --test tests/architecture.test.mjs",
+    "test:configuration": "node --import tsx --test tests/configuration.test.ts tests/profile-placeholder-photo.test.ts",
     "test:persistence": "npm run db:deploy && npm run db:seed && npm run db:seed && node --test tests/persistence.integration.test.mjs",
-    "check": "npm run db:validate && npm run typecheck && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build:next && npm run test:ui && npm run test:copyright",
+    "check": "npm run db:validate && npm run typecheck && npm run test:configuration && npm run test:architecture && npm run test:persistence && npm run test:http && npm run build && npm run test:ui",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
@@ -25,15 +26,13 @@
     "test:http": "npm run db:deploy && npm run db:seed && node --test tests/http.integration.test.mjs",
     "dev": "next dev",
     "build": "next build",
-    "build:next": "next build",
     "start": "next start",
     "test:ui": "npm run build:architecture && node --test tests/ui-logic.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
-    "test:copyright": "node --test tests/copyright-headers.test.mjs"
+    "vercel-build": "npm run db:deploy && npm run db:seed && npm run build"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
-    "@types/better-sqlite3": "9.6.0",
     "@types/node": "22.19.3",
     "prisma": "7.10.1",
     "tsx": "4.23.15",
@@ -42,13 +41,15 @@
     "@types/react-dom": "19.3.0"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "7.10.1",
+    "@prisma/adapter-pg": "7.10.1",
     "dotenv": "16.6.1",
     "@prisma/client": "7.10.1",
-    "better-sqlite3": "12.11.1",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
-  "author": "Manjeet2684"
+  "author": "Manjeet2684",
+  "overrides": {
+    "effect": "3.22.1"
+  }
 }

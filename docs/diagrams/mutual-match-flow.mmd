@@ -1,9 +1,0 @@
-%% Copyright (c) 2026 Manjeet2684. All rights reserved.
-flowchart TD
-  A[Person A swipes LIKE on Person B] --> S[Persist directed Swipe A → B]
-  S --> Q{Does B → A LIKE already exist?}
-  Q -- No --> P[Keep one-sided interest private]
-  P --> F[No Match record; no incoming-like signal in feed]
-  Q -- Yes --> T[Create canonical Match in same transaction]
-  T --> R[Return matched=true to the caller]
-  R --> UI[UI may show “It's a match!”]

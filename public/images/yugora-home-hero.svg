@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" fill="none">
+<defs>
+ <linearGradient id="bg" x1="170" y1="50" x2="1400" y2="720" gradientUnits="userSpaceOnUse"><stop stop-color="#211523"/><stop offset=".55" stop-color="#4a2e45"/><stop offset="1" stop-color="#9d6d7c"/></linearGradient>
+ <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="matrix(530 280 -290 550 1175 380)" gradientUnits="userSpaceOnUse"><stop stop-color="#ffd7bc" stop-opacity=".88"/><stop offset=".48" stop-color="#d99daf" stop-opacity=".29"/><stop offset="1" stop-color="#d99daf" stop-opacity="0"/></radialGradient>
+ <linearGradient id="ribbon" x1="80" y1="540" x2="1500" y2="220" gradientUnits="userSpaceOnUse"><stop stop-color="#b981a0" stop-opacity="0"/><stop offset=".44" stop-color="#f4c4b4" stop-opacity=".48"/><stop offset=".8" stop-color="#f1c7a5" stop-opacity=".25"/><stop offset="1" stop-color="#d9a7c2" stop-opacity="0"/></linearGradient>
+ <linearGradient id="silhouette" x1="900" y1="230" x2="1350" y2="700" gradientUnits="userSpaceOnUse"><stop stop-color="#261b29"/><stop offset="1" stop-color="#4b3046"/></linearGradient>
+ <filter id="blur"><feGaussianBlur stdDeviation="26"/></filter>
+</defs>
+<rect width="1600" height="760" fill="url(#bg)"/><rect width="1600" height="760" fill="url(#glow)"/>
+<ellipse cx="1190" cy="390" rx="360" ry="250" fill="#ffd9bd" fill-opacity=".24" filter="url(#blur)"/>
+<path d="M0 620C280 470 430 760 760 590S1200 300 1600 80" stroke="url(#ribbon)" stroke-width="105"/>
+<path d="M-70 700C260 470 410 740 780 610S1190 360 1640 250" stroke="#f4c4c5" stroke-opacity=".32" stroke-width="2"/>
+<path d="M470 760C700 590 900 680 1110 500S1350 200 1590 15" stroke="#f9d6c0" stroke-opacity=".38" stroke-width="3"/>
+<path d="M800 0C1070 95 1150 210 1210 340S1400 580 1600 650" stroke="#f6cdbb" stroke-opacity=".28" stroke-width="2"/>
+<circle cx="1050" cy="250" r="86" fill="#241b29" fill-opacity=".3"/><circle cx="1290" cy="290" r="82" fill="#241b29" fill-opacity=".27"/>
+<!-- two quiet, abstract profiles facing each other -->
+<path d="M850 760c27-155 80-260 175-302 39-17 89-20 119 1 52 37 74 100 92 168l30 133H850Z" fill="url(#silhouette)"/>
+<path d="M1034 180c-4-45 25-83 73-92 51-9 91 22 95 70 3 37-7 59-20 76-8 11-23 16-26 34l-5 35c-2 22-22 37-45 33-33-6-50-29-51-53l-1-22c-12-18-18-46-20-81Z" fill="#332235"/>
+<path d="M1120 760c20-163 50-252 133-284 64-25 127 0 166 61 33 52 43 128 54 223h-353Z" fill="#2d202f" fill-opacity=".92"/>
+<path d="M1267 211c-7-50 19-92 65-105 46-13 92 11 102 58 8 35-3 65-20 84-9 10-22 20-24 38l-4 31c-3 22-25 34-47 27-29-9-45-33-43-58l2-22c-17-17-28-33-31-53Z" fill="#3c2a3c"/>
+<path d="M1048 112c24-58 93-72 139-43 24 15 32 38 34 69-20-25-42-35-74-31-33 4-64 20-99 5Z" fill="#201723"/>
+<path d="M1280 124c27-44 88-44 117-12 22 24 25 48 18 72-21-31-51-43-82-40-24 2-39-2-53-20Z" fill="#251a29"/>
+<path d="M745 0c110 15 220 44 328 88 145 59 246 119 355 219" stroke="#ffe0c7" stroke-opacity=".2" stroke-width="2"/>
+<rect width="1600" height="760" fill="url(#bg)" opacity=".08"/>
+</svg>
