@@ -19,7 +19,7 @@ export async function readBoundedRequestBody(
 
   const declaredLength = request.headers.get("content-length");
   if (declaredLength !== null) {
-    if (!/^\\d+$/u.test(declaredLength)) {
+    if (!/^\d+$/u.test(declaredLength)) {
       return { ok: false, reason: "unreadable" };
     }
     if (Number(declaredLength) > maxBytes) {
